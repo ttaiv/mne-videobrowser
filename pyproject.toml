@@ -7,7 +7,9 @@ authors = [
     { name = "Teemu Taivainen", email = "teemu.taivainen@hotmail.fi" }
 ]
 requires-python = ">=3.10"
-dependencies = ["mne", "opencv-python-headless", "sounddevice"]
+# This list only the dependencies that are meant to be installed with pip!
+# Install others using conda as described in the README.
+dependencies = ["opencv-python-headless"]
 
 [project.optional-dependencies]
 dev = [
