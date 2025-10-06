@@ -1,7 +1,12 @@
 # Video browser extension for MNE Python's qt raw data browser
 
-**Work in progress.** This project is based on [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project)
-and currently works with video files recorded using software from that project.
+This is an open-source Python package for browsing video and audio time-synchronized to MEG/EEG data.
+It serves as an add-on for [mne-qt-browser](https://github.com/mne-tools/mne-qt-browser), which is part
+of [MNE-Python](https://mne.tools/stable/), an open-source Python package for exploring, visualizing,
+and analyzing human neurophysiological data.
+
+This project also complements [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project)
+by supporting video and audio files recorded with their software.
 
 ![VideoMEG browser screenshot](browser_screenshot.png)
 Screenshot of the browser extension showing video from our validation measurement (in which a plushie named Herba kindly
@@ -25,7 +30,7 @@ and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-
    conda activate mne-videomeg
    ```
 
-3. Install videomeg-browser:
+3. Install videomeg-browser with rest of the dependencies:
 
    ```bash
    pip install videomeg-browser
