@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 # This list only the dependencies that are meant to be installed with pip!
-# Install others using conda as described in the README.
+# MNE-Python should be installed with conda, see README for installation instructions.
 dependencies = ["opencv-python-headless", "sounddevice"]
 
 [project.optional-dependencies]
