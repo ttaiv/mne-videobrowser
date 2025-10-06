@@ -7,7 +7,7 @@ and currently works with video files recorded using software from that project.
 Screenshot of the browser extension showing video from our validation measurement (in which a plushie named Herba kindly
 volunteered to be the test subject), synchronized with MNE-Python's sample MEG data.
 
-## Installation for development
+## Installation
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
 and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-Python should be installed using
@@ -25,12 +25,10 @@ and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-
    conda activate mne-videomeg
    ```
 
-3. Clone this repository and navigate to project root.
-
-4. Install the package in editable mode:
+3. Install videomeg-browser:
 
    ```bash
-   pip install -e .
+   pip install videomeg-browser
    ```
 
 Now you should be able to test the video browser by running example scripts in `scripts/` directory. For example:
@@ -42,7 +40,25 @@ python scripts/run_video_sync_demo_2.py
 Script `run_video_sync_demo_2.py` uses a sample dataset from MNE Python and a fake video file. Other examples require you
 to have your own raw data and video files in a correct format.
 
-## Running tests
+## For developers
+
+### Installation for development
+
+To install this package for development, follow steps 1 and 2 in regular installation guide
+(and maybe rename the conda environment to `mne-videomeg-dev` or similar to distinguish it from the
+stable version) and then
+
+1. Clone this repository and navigate to project root.
+
+2. Install the package in editable mode.
+
+   ```bash
+   pip install -e .
+   ```
+
+   Editable mode ensures that changes in source code are reflected to the installed package.
+
+### Running tests
 
 Tests are located in directory `tests/` and they run using package `pytest`. You can install it to your environment by running:
 
