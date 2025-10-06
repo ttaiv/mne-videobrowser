@@ -24,15 +24,9 @@ and `sounddevice` for audio playback. Here's how to set up an environment with a
    conda activate mne-videomeg
    ```
 
-3. Add light version of `OpenCV` to the environment:
+3. Clone this repository and navigate to project root.
 
-   ```bash
-   pip install opencv-python-headless
-   ```
-
-4. Clone this repository and navigate to project root.
-
-5. Install the package in editable mode:
+4. Install the package in editable mode:
 
    ```bash
    pip install -e .
