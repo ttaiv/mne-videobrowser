@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Browse video and audio in sync with MEG/EEG data"
 readme = "README.md"
 authors = [
-    { name = "Teemu Taivainen", email = "teemu.taivainen@hotmail.fi" }
+    { name = "Teemu Taivainen", email = "ttaiv@outlook.com" }
 ]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
