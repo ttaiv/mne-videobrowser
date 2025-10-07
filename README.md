@@ -43,14 +43,7 @@ dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
    sudo apt install libportaudio2
    ```
 
-Now you should be able to test the video browser by running example scripts in `examples/` directory. For example:
-
-```bash
-python examples/video_sample_meg_sync.py
-```
-
-Examples `video_sample_meg_sync.py` and `multiple_meg_video_sync.py` use a sample dataset from MNE Python and a fake video file.
-Other examples require you to have your own MEG/EEG data and video and/or audio files in a correct format.
+See `examples/` for usage examples.
 
 ## For developers
 
