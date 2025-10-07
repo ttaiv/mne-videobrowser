@@ -62,23 +62,19 @@ stable version), but instead of `pip install mne-videobrowser`:
 
 1. Clone this repository and navigate to project root.
 
-2. Install the package in editable mode.
+2. Install the package in editable mode and with development dependencies.
 
    ```bash
-   pip install -e .
+   pip install -e .[dev]
    ```
 
    Editable mode ensures that changes in source code are reflected to the installed package.
 
 ### Running tests
 
-Tests are located in directory `tests/` and they run using package `pytest`. You can install it to your environment by running:
+Tests are located in directory `tests/` and they run using package `pytest` (included in development dependencies).
 
-```bash
-pip install -e .[dev]
-```
-
-Then you can run all the tests with:
+You can run all the tests with:
 
 ```bash
 pytest
