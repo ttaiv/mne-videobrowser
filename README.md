@@ -56,9 +56,9 @@ Other examples require you to have your own MEG/EEG data and video and/or audio 
 
 ### Installation for development
 
-To install this package for development, follow steps 1 and 2 in regular installation guide
+To install this package for development, follow the regular installation guide
 (and maybe rename the conda environment to `mne-videobrowser-dev` or similar to distinguish it from the
-stable version) and then
+stable version), but instead of `pip install mne-videobrowser`:
 
 1. Clone this repository and navigate to project root.
 
