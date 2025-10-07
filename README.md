@@ -43,7 +43,7 @@ dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
    sudo apt install libportaudio2
    ```
 
-See `examples/` for usage examples.
+See usage examples in [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/main/examples).
 
 ## For developers
 
