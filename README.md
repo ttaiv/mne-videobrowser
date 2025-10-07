@@ -36,6 +36,13 @@ and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-
    pip install mne-videobrowser
    ```
 
+4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
+dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
+
+   ```bash
+   sudo apt install libportaudio2
+   ```
+
 Now you should be able to test the video browser by running example scripts in `scripts/` directory. For example:
 
 ```bash
