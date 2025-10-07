@@ -19,9 +19,8 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-import videomeg_browser.browsers.gui_utils as gui_utils
-
 from ..media.video import VideoFile
+from . import gui_utils
 from .syncable_browser import SyncableBrowserWidget, SyncStatus
 
 logger = logging.getLogger(__name__)

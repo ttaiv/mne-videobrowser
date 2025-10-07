@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pytest
 
-from videomeg_browser.media.video import VideoFileHelsinkiVideoMEG
+from mne_videobrowser.media.video import VideoFileHelsinkiVideoMEG
 
 # Tests with a specific video file in Helsinki videoMEG format.
 VIDEO_PATH = (
