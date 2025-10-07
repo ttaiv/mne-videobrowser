@@ -1,5 +1,5 @@
 [project]
-name = "videomeg-browser"
+name = "mne-videobrowser"
 version = "0.1.0"
 description = "Browse video and audio in sync with MEG/EEG data"
 readme = "README.md"

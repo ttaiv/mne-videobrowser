@@ -18,22 +18,22 @@ In addition to MNE-Python, this project requires package `OpenCV` for standard v
 and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-Python should be installed using
 [conda](https://github.com/conda/conda?tab=readme-ov-file).
 
-1. Create a new conda environment (named `mne-videomeg`) with MNE-Python installed.
+1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
 
    ```bash
-   conda create --channel=conda-forge --strict-channel-priority --name=mne-videomeg mne
+   conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne
    ```
 
 2. Activate the environment:
 
    ```bash
-   conda activate mne-videomeg
+   conda activate mne-videobrowser
    ```
 
-3. Install videomeg-browser with rest of the dependencies:
+3. Install this package with rest of the dependencies:
 
    ```bash
-   pip install videomeg-browser
+   pip install mne-videobrowser
    ```
 
 Now you should be able to test the video browser by running example scripts in `scripts/` directory. For example:
@@ -50,7 +50,7 @@ to have your own raw data and video files in a correct format.
 ### Installation for development
 
 To install this package for development, follow steps 1 and 2 in regular installation guide
-(and maybe rename the conda environment to `mne-videomeg-dev` or similar to distinguish it from the
+(and maybe rename the conda environment to `mne-videobrowser-dev` or similar to distinguish it from the
 stable version) and then
 
 1. Clone this repository and navigate to project root.
