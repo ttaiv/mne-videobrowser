@@ -16,7 +16,7 @@ volunteered to be the test subject), synchronized with MNE-Python's sample MEG d
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
 and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-Python should be installed using
-[conda](https://github.com/conda/conda?tab=readme-ov-file).
+[conda](https://github.com/conda/conda).
 
 1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
 
