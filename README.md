@@ -8,7 +8,7 @@ and analyzing human neurophysiological data.
 This project also complements [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project)
 by supporting video and audio files recorded with their software.
 
-![VideoMEG browser screenshot](browser_screenshot.png)
+![VideoMEG browser screenshot](https://raw.githubusercontent.com/ttaiv/mne-videobrowser/main/browser_screenshot.png)
 Screenshot of the browser extension showing a black video frame and a test audio file synchronized with MNE-Python's sample MEG data.
 
 ## Installation
