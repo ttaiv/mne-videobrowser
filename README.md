@@ -9,8 +9,7 @@ This project also complements [Helsinki VideoMEG project](https://github.com/Hel
 by supporting video and audio files recorded with their software.
 
 ![VideoMEG browser screenshot](browser_screenshot.png)
-Screenshot of the browser extension showing video from our validation measurement (in which a plushie named Herba kindly
-volunteered to be the test subject), synchronized with MNE-Python's sample MEG data.
+Screenshot of the browser extension showing a black video frame and a test audio file synchronized with MNE-Python's sample MEG data.
 
 ## Installation
 
