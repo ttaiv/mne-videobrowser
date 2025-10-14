@@ -1,18 +1,41 @@
 [project]
-name = "videomeg-browser"
+name = "mne-videobrowser"
 version = "0.1.0"
-description = "Browse video in sync with MEG/EEG data"
+description = "Browse video and audio in sync with MEG/EEG data"
 readme = "README.md"
 authors = [
-    { name = "Teemu Taivainen", email = "teemu.taivainen@hotmail.fi" }
+    { name = "Teemu Taivainen", email = "ttaiv@outlook.com" }
 ]
-requires-python = ">=3.10"
-dependencies = ["mne", "opencv-python-headless", "sounddevice"]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
+keywords = ["eeg", "meg", "brain", "video", "audio", "neuroimaging", "neuroscience"]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Multimedia :: Video :: Display",
+]
+
+requires-python = ">=3.10"
+# This list only the dependencies that are meant to be installed with pip!
+# MNE-Python should be installed with conda, see README for installation instructions.
+dependencies = ["opencv-python-headless", "sounddevice"]
 [project.optional-dependencies]
 dev = [
-  "pytest"
+  "pytest",
+  "PyQt5-stubs"  # this helps IDE with type hints
 ]
+
+[project.urls]
+Repository = "https://github.com/ttaiv/mne-videobrowser"
 
 [build-system]
 requires = ["hatchling"]

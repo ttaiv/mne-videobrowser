@@ -25,7 +25,7 @@ def load_icon_pixmap(file_name: str) -> QPixmap | None:
     QPixmap | None
         The loaded QPixmap if successful, or None if the file was not found.
     """
-    icons_module = "videomeg_browser.icons"
+    icons_module = "mne_videobrowser.icons"
     pixmap = QPixmap()
     resource = files(icons_module).joinpath(file_name)
     try:

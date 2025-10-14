@@ -10,7 +10,7 @@ import mne
 import numpy as np
 from mne.datasets import sample
 
-from videomeg_browser import (
+from mne_videobrowser import (
     AudioFileHelsinkiVideoMEG,
     TimestampAligner,
     browse_raw_with_audio,

@@ -1,61 +1,72 @@
 # Video browser extension for MNE Python's qt raw data browser
 
-**Work in progress.** This project is based on [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project)
-and currently works with video files recorded using software from that project.
+This is an open-source Python package for browsing video and audio time-synchronized to MEG/EEG data.
+It serves as an add-on for [mne-qt-browser](https://github.com/mne-tools/mne-qt-browser), which is part
+of [MNE-Python](https://mne.tools/stable/), an open-source Python package for exploring, visualizing,
+and analyzing human neurophysiological data.
 
-![VideoMEG browser screenshot](browser_screenshot.png)
-Screenshot of the browser extension showing video from our validation measurement (in which a plushie named Herba kindly
-volunteered to be the test subject), synchronized with MNE-Python's sample MEG data.
+This project also complements [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project)
+by supporting video and audio files recorded with their software.
 
-## Installation for development
+![VideoMEG browser screenshot](https://raw.githubusercontent.com/ttaiv/mne-videobrowser/main/browser_screenshot.png)
+Screenshot of the browser extension showing a black video frame and a test audio file synchronized with MNE-Python's sample MEG data.
 
-In addition to MNE-Python, this project currently requires package `OpenCV` for standard video file (such as .mp4) reading
-and `sounddevice` for audio playback. Here's how to set up an environment with all the necessary dependencies:
+## Installation
 
-1. Create a new conda environment (named `mne-videomeg`) with MNE-Python and sounddevice.
+In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
+and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-Python should be installed using
+[conda](https://github.com/conda/conda).
+
+1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
 
    ```bash
-   conda create --channel=conda-forge --strict-channel-priority --name=mne-videomeg mne python-sounddevice
+   conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne
    ```
 
 2. Activate the environment:
 
    ```bash
-   conda activate mne-videomeg
+   conda activate mne-videobrowser
    ```
 
-3. Add light version of `OpenCV` to the environment:
+3. Install this package with rest of the dependencies:
 
    ```bash
-   pip install opencv-python-headless
+   pip install mne-videobrowser
    ```
 
-4. Clone this repository and navigate to project root.
-
-5. Install the package in editable mode:
+4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
+dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
    ```bash
-   pip install -e .
+   sudo apt install libportaudio2
    ```
 
-Now you should be able to test the video browser by running example scripts in `scripts/` directory. For example:
+See usage examples in [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/main/examples).
 
-```bash
-python scripts/run_video_sync_demo_2.py
-```
+## For developers
 
-Script `run_video_sync_demo_2.py` uses a sample dataset from MNE Python and a fake video file. Other examples require you
-to have your own raw data and video files in a correct format.
+### Installation for development
 
-## Running tests
+To install this package for development, follow the regular installation guide
+(and maybe rename the conda environment to `mne-videobrowser-dev` or similar to distinguish it from the
+stable version), but instead of `pip install mne-videobrowser`:
 
-Tests are located in directory `tests/` and they run using package `pytest`. You can install it to your environment by running:
+1. Clone this repository and navigate to project root.
 
-```bash
-pip install -e .[dev]
-```
+2. Install the package in editable mode and with development dependencies.
 
-Then you can run all the tests with:
+   ```bash
+   pip install -e .[dev]
+   ```
+
+   Editable mode ensures that changes in source code are reflected to the installed package.
+
+### Running tests
+
+Tests are located in directory `tests/` and they run using package `pytest` (included in development dependencies).
+
+You can run all the tests with:
 
 ```bash
 pytest

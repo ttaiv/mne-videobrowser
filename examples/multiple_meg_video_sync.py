@@ -8,10 +8,10 @@ import mne
 import numpy as np
 import numpy.typing as npt
 import scipy
-from demo_utils import create_fake_video_with_markers
+from example_utils import create_fake_video_with_markers
 from mne.datasets import sample
 
-from videomeg_browser import TimestampAligner, browse_raw_with_video
+from mne_videobrowser import TimestampAligner, browse_raw_with_video
 
 
 def _create_binary_stimulus_vector(

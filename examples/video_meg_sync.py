@@ -11,7 +11,7 @@ import mne
 import numpy as np
 from numpy.typing import NDArray
 
-from videomeg_browser import (
+from mne_videobrowser import (
     TimestampAligner,
     VideoFileHelsinkiVideoMEG,
     browse_raw_with_video,

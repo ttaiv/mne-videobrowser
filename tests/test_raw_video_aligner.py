@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from videomeg_browser.timestamp_aligner import (
+from mne_videobrowser.timestamp_aligner import (
     MapFailureReason,
     MappingFailure,
     MappingResult,

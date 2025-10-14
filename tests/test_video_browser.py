@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from videomeg_browser.browsers.video_browser import FrameRateTracker
+from mne_videobrowser.browsers.video_browser import FrameRateTracker
 
 
 class TestFrameRateTracker:
