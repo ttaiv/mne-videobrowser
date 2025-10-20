@@ -13,7 +13,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy import signal
 
-from .helsinki_videomeg_file_utils import UnknownVersionError, read_attrib
+from .helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -290,13 +290,13 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             )
             self.format_string = data_file.read(2).decode("ascii")
 
-            # Get the size of the data part in the file.
             begin_data = data_file.tell()
-            data_file.seek(0, 2)
+            data_file.seek(0, 2)  # seek to end of file
             end_data = data_file.tell()
+            # Seek back to the beginning of audio data blocks.
             data_file.seek(begin_data, 0)
 
-            ts, self.buffer_size, total_sz = read_attrib(data_file, self.ver)
+            ts, self.buffer_size, total_sz = read_block_attributes(data_file, self.ver)
             data_file.seek(begin_data, 0)
 
             assert (end_data - begin_data) % total_sz == 0
@@ -306,7 +306,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             self.buffer_timestamps_ms = np.zeros(self._n_chunks)
 
             for i in range(self._n_chunks):
-                ts, sz, cur_total_sz = read_attrib(data_file, self.ver)
+                ts, sz, cur_total_sz = read_block_attributes(data_file, self.ver)
                 assert cur_total_sz == total_sz
                 self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
                     data_file.read(sz)

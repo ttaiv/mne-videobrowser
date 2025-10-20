@@ -13,7 +13,7 @@ import imageio.v3 as iio
 import numpy as np
 import numpy.typing as npt
 
-from .helsinki_videomeg_file_utils import UnknownVersionError, read_attrib
+from .helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +262,7 @@ class VideoFileHelsinkiVideoMEG(VideoFile):
         self._frame_ptrs = []  # List of tuples (offset, size) for each frame
 
         while self._file.tell() < end_data:  # we did not reach end of file
-            ts, sz, total_sz = read_attrib(self._file, self._version)
+            ts, sz, total_sz = read_block_attributes(self._file, self._version)
             assert ts != -1
             timestamps_list.append(ts)
             self._frame_ptrs.append((self._file.tell(), sz))
