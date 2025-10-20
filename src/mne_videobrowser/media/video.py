@@ -263,7 +263,6 @@ class VideoFileHelsinkiVideoMEG(VideoFile):
 
         while self._file.tell() < end_data:  # we did not reach end of file
             ts, sz, total_sz = read_block_attributes(self._file, self._version)
-            assert ts != -1
             timestamps_list.append(ts)
             self._frame_ptrs.append((self._file.tell(), sz))
             assert self._file.tell() + sz <= end_data

@@ -17,11 +17,6 @@ def read_block_attributes(data_file, ver: int) -> tuple[int, int, int]:
 
     Reads the header in the beginning of a data block, advancing the file
     position to the payload part of the data block (right after the header).
-    After calling this function, you can read the payload of the data block
-    with data_file.read(sz).
-
-
-    If cannot read the attributes (EOF?), return -1 in ts.
 
     Parameters
     ----------
@@ -33,9 +28,9 @@ def read_block_attributes(data_file, ver: int) -> tuple[int, int, int]:
     Returns
     -------
     timestamp : int
-        Timestamp of the data block in milliseconds, or -1 if cannot read.
+        Timestamp of the data block in milliseconds.
     payload_size : int
-        Size of the payload part of the data block in bytes, or -1 if cannot read.
+        Size of the payload part of the data block in bytes.
     total_block_size : int
         Total size of the data block (header + payload) in bytes.
     """
@@ -44,9 +39,10 @@ def read_block_attributes(data_file, ver: int) -> tuple[int, int, int]:
         if len(attributes) == 12:
             timestamp, payload_size = struct.unpack("QI", attributes)
         else:
-            timestamp = -1
-            payload_size = -1
-
+            raise EOFError(
+                "Tried to read 12 bytes of data block attributes, but got only "
+                f"{len(attributes)} bytes."
+            )
         total_block_size = payload_size + 12
 
     elif ver == 2 or ver == 3:
@@ -54,9 +50,10 @@ def read_block_attributes(data_file, ver: int) -> tuple[int, int, int]:
         if len(attributes) == 20:
             timestamp, block_id, payload_size = struct.unpack("QQI", attributes)
         else:
-            timestamp = -1
-            payload_size = -1
-
+            raise EOFError(
+                "Tried to read 20 bytes of data block attributes, but got only "
+                f"{len(attributes)} bytes."
+            )
         total_block_size = payload_size + 20
 
     else:
