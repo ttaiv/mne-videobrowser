@@ -273,53 +273,52 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         super().__init__(fname)
         self._regression_segment_length = regression_segment_length
         # Open the file to parse metadata and read the audio bytes into memory.
-        with open(fname, "rb") as data_file:
-            # Check the magic string
-            if not data_file.read(len(magic_str)) == magic_str.encode("utf8"):
-                raise ValueError(
-                    f"File {fname} does not start with the expected "
-                    f"magic string: {magic_str}."
-                )
-            self.ver = struct.unpack("I", data_file.read(4))[0]
-            if self.ver != 0:
-                # Can only read version 0 for the time being
-                raise UnknownVersionError()
-
-            self._sampling_rate, self._n_channels = struct.unpack(
-                "II", data_file.read(8)
+        self._data_file = open(self._fname, "rb")
+        # Check the magic string
+        if not self._data_file.read(len(magic_str)) == magic_str.encode("utf8"):
+            raise ValueError(
+                f"File {fname} does not start with the expected "
+                f"magic string: {magic_str}."
             )
-            self.format_string = data_file.read(2).decode("ascii")
+        self.ver = struct.unpack("I", self._data_file.read(4))[0]
+        if self.ver != 0:
+            # Can only read version 0 for the time being
+            raise UnknownVersionError()
 
-            begin_data = data_file.tell()
-            data_file.seek(0, 2)  # seek to end of file
-            end_data = data_file.tell()
-            # Seek back to the beginning of audio data blocks.
-            data_file.seek(begin_data, 0)
+        self._sampling_rate, self._n_channels = struct.unpack(
+            "II", self._data_file.read(8)
+        )
+        self.format_string = self._data_file.read(2).decode("ascii")
 
-            # Get the size of the payload in one audio data block and the total size
-            # of the block (header + payload). Advances file position!
-            _, payload_size, block_size = read_block_attributes(data_file, self.ver)
-            self.buffer_size = payload_size  # size of audio data in one block
-            data_file.seek(begin_data, 0)  # return to beginning
+        begin_data = self._data_file.tell()
+        self._data_file.seek(0, 2)  # seek to end of file
+        end_data = self._data_file.tell()
+        # Seek back to the beginning of audio data blocks.
+        self._data_file.seek(begin_data, 0)
 
-            assert (end_data - begin_data) % block_size == 0
+        # Get the size of the payload in one audio data block and the total size
+        # of the block (header + payload). Advances file position!
+        _, payload_size, block_size = read_block_attributes(self._data_file, self.ver)
+        self.buffer_size = payload_size  # size of audio data in one block
+        self._data_file.seek(begin_data, 0)  # return to beginning
 
-            self._n_blocks = (end_data - begin_data) // block_size
-            self.raw_audio = bytearray(self._n_blocks * self.buffer_size)
-            self.buffer_timestamps_ms = np.zeros(self._n_blocks)
+        assert (end_data - begin_data) % block_size == 0
 
-            for i in range(self._n_blocks):
-                timestamp, sz, current_block_size = read_block_attributes(
-                    data_file, self.ver
-                )
-                assert current_block_size == block_size, (
-                    "Inconsistent block size while reading audio data."
-                )
-                self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
-                    data_file.read(sz)
-                )
-                self.buffer_timestamps_ms[i] = timestamp
-        # close the file
+        self._n_blocks = (end_data - begin_data) // block_size
+        self.raw_audio = bytearray(self._n_blocks * self.buffer_size)
+        self.buffer_timestamps_ms = np.zeros(self._n_blocks)
+
+        for i in range(self._n_blocks):
+            timestamp, sz, current_block_size = read_block_attributes(
+                self._data_file, self.ver
+            )
+            assert current_block_size == block_size, (
+                "Inconsistent block size while reading audio data."
+            )
+            self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
+                self._data_file.read(sz)
+            )
+            self.buffer_timestamps_ms[i] = timestamp
 
         # Make sure that the timestamps are increasing
         if not np.all(np.diff(self.buffer_timestamps_ms) >= 0):
