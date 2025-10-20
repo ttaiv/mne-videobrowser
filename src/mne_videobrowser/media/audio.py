@@ -296,22 +296,29 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             # Seek back to the beginning of audio data blocks.
             data_file.seek(begin_data, 0)
 
-            ts, self.buffer_size, total_sz = read_block_attributes(data_file, self.ver)
-            data_file.seek(begin_data, 0)
+            # Get the size of the payload in one audio data block and the total size
+            # of the block (header + payload). Advances file position!
+            _, payload_size, block_size = read_block_attributes(data_file, self.ver)
+            self.buffer_size = payload_size  # size of audio data in one block
+            data_file.seek(begin_data, 0)  # return to beginning
 
-            assert (end_data - begin_data) % total_sz == 0
+            assert (end_data - begin_data) % block_size == 0
 
-            self._n_chunks = (end_data - begin_data) // total_sz
-            self.raw_audio = bytearray(self._n_chunks * self.buffer_size)
-            self.buffer_timestamps_ms = np.zeros(self._n_chunks)
+            self._n_blocks = (end_data - begin_data) // block_size
+            self.raw_audio = bytearray(self._n_blocks * self.buffer_size)
+            self.buffer_timestamps_ms = np.zeros(self._n_blocks)
 
-            for i in range(self._n_chunks):
-                ts, sz, cur_total_sz = read_block_attributes(data_file, self.ver)
-                assert cur_total_sz == total_sz
+            for i in range(self._n_blocks):
+                timestamp, sz, current_block_size = read_block_attributes(
+                    data_file, self.ver
+                )
+                assert current_block_size == block_size, (
+                    "Inconsistent block size while reading audio data."
+                )
                 self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
                     data_file.read(sz)
                 )
-                self.buffer_timestamps_ms[i] = ts
+                self.buffer_timestamps_ms[i] = timestamp
         # close the file
 
         # Make sure that the timestamps are increasing
@@ -332,7 +339,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             self._n_channels * self._n_bytes_per_sample
         )
         # Calculate total number of samples per channel in the whole audio.
-        self._n_samples = self._n_samples_per_buffer * self._n_chunks
+        self._n_samples = self._n_samples_per_buffer * self._n_blocks
 
         # Initialize the attributes for unpacked audio data as None.
         # If user tries to access these without explicitly calling unpack_audio(),
@@ -551,7 +558,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         )
 
         # Prepare arrays to hold the regression errors and the computed timestamps.
-        regression_errors = -np.ones(self._n_chunks)
+        regression_errors = -np.ones(self._n_blocks)
         audio_timestamps_ms = -np.ones(self.n_samples)
 
         # Split the data into segments for piecewise linear regression.
