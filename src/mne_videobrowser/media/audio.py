@@ -349,6 +349,14 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         self._unpacked_mean_audio: npt.NDArray[np.float32] | None = None  # (n_samples,)
         self._audio_timestamps_ms: npt.NDArray[np.float64] | None = None  # (n_samples,)
 
+    def __del__(self) -> None:
+        """Destructor to ensure the audio file is closed."""
+        self.close()
+
+    def close(self) -> None:
+        """Close the audio file."""
+        self._data_file.close()
+
     def get_audio_all_channels(
         self, sample_range: tuple[int, int] | None = None
     ) -> npt.NDArray[np.float32]:
