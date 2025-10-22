@@ -350,16 +350,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         self._n_samples = self._n_samples_per_channel_per_buffer * self._n_blocks
 
         self._compute_audio_timestamps()  # will set self._audio_timestamps_ms
-        assert self._audio_timestamps_ms is not None
-
-        # Initialize the attributes for unpacked audio data as None.
-        # If user tries to access these without explicitly calling unpack_audio(),
-        # it will be done automatically by the getter methods.
-
-        # (n_channels, n_samples)
-        # self._unpacked_audio: npt.NDArray[np.float32] | None = None
-        # self._unpacked_mean_audio: npt.NDArray[np.float32] | None = None  # (n_samples,)
-        # self._audio_timestamps_ms: npt.NDArray[np.float64] | None = None  # (n_samples,)
 
     def __del__(self) -> None:
         """Destructor to ensure the audio file is closed."""
@@ -373,8 +363,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         self, sample_range: tuple[int, int] | None = None
     ) -> npt.NDArray[np.float32]:
         """Get audio data for all channels in the specified sample range.
-
-        Triggers unpacking of audio data if it has not been done yet.
 
         Parameters
         ----------
@@ -393,14 +381,9 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             "Audio data should be unpacked after calling _ensure_unpacked_audio."
         )
         """
-        if sample_range is None:
-            return self._unpacked_audio[:, :]
-
-        start_sample, end_sample = sample_range
-        if start_sample < 0 or end_sample > self._unpacked_audio.shape[1]:
-            raise ValueError("Sample range is out of bounds.")
-
-        return self._unpacked_audio[:, start_sample:end_sample]
+        return self._get_audio_samples(
+            sample_range if sample_range is not None else (0, self.n_samples)
+        )
 
     def get_audio_mean(
         self, sample_range: tuple[int, int] | None = None
@@ -420,20 +403,12 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         npt.NDArray[np.float32]
             A 1D array containing the mean audio data for the specified sample range.
         """
-        self._ensure_unpacked_audio()
-        assert self._unpacked_mean_audio is not None, (
-            "Mean audio data should be available after calling _ensure_unpacked_audio."
+        audio_all_channels = self._get_audio_samples(
+            sample_range if sample_range is not None else (0, self.n_samples)
         )
-        if sample_range is None:
-            return self._unpacked_mean_audio[:]
+        return audio_all_channels.mean(axis=0)
 
-        start_sample, end_sample = sample_range
-        if start_sample < 0 or end_sample > self._unpacked_mean_audio.shape[0]:
-            raise ValueError("Sample range is out of bounds.")
-
-        return self._unpacked_mean_audio[start_sample:end_sample]
-
-    def get_audio_timestamps_ms(self) -> npt.NDArray[np.float64]:
+    def get_audio_timestamps_ms(self) -> npt.NDArray[np.float32]:
         """Get timestamps for all audio samples in milliseconds.
 
         Triggers unpacking of audio data if it has not been done yet.
@@ -444,66 +419,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             A 1D array containing timestamps for all audio samples in milliseconds.
         """
         return self._audio_timestamps_ms
-
-    def unpack_audio(self, normalize: bool = True) -> None:
-        """Unpack the raw byte audio data and compute timestamps for all samples.
-
-        Produces a float32 numpy array of shape (n_channels, n_samples) that can
-        be accessed via getter methods `get_audio_all_channels()` and
-        `get_audio_mean()`.
-
-        This method is automatically called by the getter methods that require unpacked
-        audio data. However, as this method is heavy on memory and time consumption,
-        it is recommended to once call it manually before using the getters to avoid
-        surprisingly heavy get operations.
-
-        NOTE: this method consumes a lot of memory!
-
-        Parameters
-        ----------
-        normalize : bool, optional
-            If True (default), the audio samples are normalized to the range [-1, 1].
-            Normalization is done by dividing all samples by the maximum absolute value
-            of the samples across all channels (global normalization).
-        """
-        logger.info("Unpacking audio data, this may take a while...")
-        self._compute_audio_timestamps()
-
-        total_samples = self.n_samples * self.n_channels
-
-        # Create a format string for unpacking all samples at once.
-        endian_char = self.format_string[0]
-        sample_type = self.format_string[1]
-        bulk_format_string = f"{endian_char}{total_samples}{sample_type}"
-
-        # Unpack all the samples.
-        total_bytes = total_samples * self._n_bytes_per_sample
-        unpacked_samples = struct.unpack(
-            bulk_format_string, self.raw_audio[:total_bytes]
-        )
-        # Convert the tuple to numpy array.
-        audio = np.array(unpacked_samples, dtype=np.float32)
-
-        # Reshape (n_channels, n_samples) layout.
-        # The data is interleaved, so reshape to (n_samples, n_channels) first
-        # and then transpose.
-        audio = audio.reshape(self.n_samples, self.n_channels).T
-
-        if normalize:
-            global_max = np.abs(audio).max()
-            if global_max > 0:
-                audio /= global_max
-            else:
-                logger.warning("All audio samples are zero, normalization skipped.")
-
-        self._unpacked_audio = audio
-        self._unpacked_mean_audio = audio.mean(axis=0)
-
-    def print_stats(self) -> None:
-        """Print basic statistics about the audio file."""
-        # Overrides the base class method to ensure audio is unpacked first.
-        self._ensure_unpacked_audio()
-        return super().print_stats()
 
     @property
     def sampling_rate(self) -> int:
@@ -535,6 +450,9 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         start_sample, end_sample = sample_range
         if start_sample < 0 or end_sample > self.n_samples:
             raise ValueError("Sample range is out of bounds.")
+        if start_sample >= end_sample:
+            raise ValueError("Invalid sample range: start must be less than end.")
+
         n_samples_to_read = end_sample - start_sample
 
         # Determine which blocks to read.
@@ -638,16 +556,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
                 f"string {format_string}"
             )
         return bit_depth_map[bit_depth_char]
-
-    def _ensure_unpacked_audio(self) -> None:
-        """Ensure that the audio data is unpacked."""
-        if self._unpacked_audio is None:
-            logger.warning(
-                "Unpacked audio data is not available. "
-                "Calling unpack_audio() to unpack the audio data. "
-                "Consider calling unpack_audio() manually before using the getters."
-            )
-            self.unpack_audio()
 
     def _compute_audio_timestamps(self) -> None:
         """Transform sparse buffer timestamps into dense sample timestamps.
