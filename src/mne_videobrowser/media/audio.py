@@ -298,27 +298,31 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
         # Get the size of the payload in one audio data block and the total size
         # of the block (header + payload). Advances file position!
-        _, payload_size, block_size = read_block_attributes(self._data_file, self.ver)
-        self.buffer_size = payload_size  # size of audio data in one block
+        _, first_payload_size, first_block_size = read_block_attributes(
+            self._data_file, self.ver
+        )
+        self.buffer_size_bytes = first_payload_size  # size of audio data in one block
         self._data_file.seek(begin_data, 0)  # return to beginning
 
-        assert (end_data - begin_data) % block_size == 0
+        assert (end_data - begin_data) % first_block_size == 0
 
-        self._n_blocks = (end_data - begin_data) // block_size
-        self.raw_audio = bytearray(self._n_blocks * self.buffer_size)
+        self._n_blocks = (end_data - begin_data) // first_block_size
+        self.raw_audio = bytearray(self._n_blocks * self.buffer_size_bytes)
         self.buffer_timestamps_ms = np.zeros(self._n_blocks)
+        self._audio_block_positions: list[int] = []
 
         for i in range(self._n_blocks):
-            timestamp, sz, current_block_size = read_block_attributes(
+            timestamp, payload_size, block_size = read_block_attributes(
                 self._data_file, self.ver
             )
-            assert current_block_size == block_size, (
+            assert block_size == first_block_size, (
                 "Inconsistent block size while reading audio data."
+                f" Expected {first_block_size}, got {block_size}."
             )
-            self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
-                self._data_file.read(sz)
-            )
+            self._audio_block_positions.append(self._data_file.tell())
+            self._data_file.seek(payload_size, 1)  # skip the audio data
             self.buffer_timestamps_ms[i] = timestamp
+        # close the file
 
         # Make sure that the timestamps are increasing
         if not np.all(np.diff(self.buffer_timestamps_ms) >= 0):
@@ -334,20 +338,28 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         # Calculate how many samples there is in one raw audio data buffer,
         # taking into account that the buffer contains interleaved samples
         # from all channels.
-        self._n_samples_per_buffer = self.buffer_size // (
-            self._n_channels * self._n_bytes_per_sample
+        one_sample_from_all_channels_size = self._n_channels * self._n_bytes_per_sample
+
+        assert self.buffer_size_bytes % one_sample_from_all_channels_size == 0, (
+            "Audio buffer size is not a multiple of one sample from all channels."
+        )
+        self._n_samples_per_channel_per_buffer = (
+            self.buffer_size_bytes // one_sample_from_all_channels_size
         )
         # Calculate total number of samples per channel in the whole audio.
-        self._n_samples = self._n_samples_per_buffer * self._n_blocks
+        self._n_samples = self._n_samples_per_channel_per_buffer * self._n_blocks
+
+        self._compute_audio_timestamps()  # will set self._audio_timestamps_ms
+        assert self._audio_timestamps_ms is not None
 
         # Initialize the attributes for unpacked audio data as None.
         # If user tries to access these without explicitly calling unpack_audio(),
         # it will be done automatically by the getter methods.
 
         # (n_channels, n_samples)
-        self._unpacked_audio: npt.NDArray[np.float32] | None = None
-        self._unpacked_mean_audio: npt.NDArray[np.float32] | None = None  # (n_samples,)
-        self._audio_timestamps_ms: npt.NDArray[np.float64] | None = None  # (n_samples,)
+        # self._unpacked_audio: npt.NDArray[np.float32] | None = None
+        # self._unpacked_mean_audio: npt.NDArray[np.float32] | None = None  # (n_samples,)
+        # self._audio_timestamps_ms: npt.NDArray[np.float64] | None = None  # (n_samples,)
 
     def __del__(self) -> None:
         """Destructor to ensure the audio file is closed."""
@@ -375,10 +387,12 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         npt.NDArray[np.float32]
             A 2D array of shape (n_channels, n_samples) containing the audio data.
         """
+        """
         self._ensure_unpacked_audio()
         assert self._unpacked_audio is not None, (
             "Audio data should be unpacked after calling _ensure_unpacked_audio."
         )
+        """
         if sample_range is None:
             return self._unpacked_audio[:, :]
 
@@ -429,10 +443,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         npt.NDArray[np.float64]
             A 1D array containing timestamps for all audio samples in milliseconds.
         """
-        self._ensure_unpacked_audio()
-        assert self._audio_timestamps_ms is not None, (
-            "Audio timestamps should be available after calling _ensure_unpacked_audio."
-        )
         return self._audio_timestamps_ms
 
     def unpack_audio(self, normalize: bool = True) -> None:
@@ -515,6 +525,93 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     def duration(self) -> float:
         return self.n_samples / self.sampling_rate
 
+    def _get_audio_samples(
+        self, sample_range: tuple[int, int]
+    ) -> npt.NDArray[np.float32]:
+        """Get audio samples in the specified range (start inclusive, end exclusive).
+
+        Determines the correct audio blocks to read from file and unpacks the samples.
+        """
+        start_sample, end_sample = sample_range
+        if start_sample < 0 or end_sample > self.n_samples:
+            raise ValueError("Sample range is out of bounds.")
+        n_samples_to_read = end_sample - start_sample
+
+        # Determine which blocks to read.
+        first_block_idx = start_sample // self._n_samples_per_channel_per_buffer
+        last_block_idx = (end_sample - 1) // self._n_samples_per_channel_per_buffer
+        n_blocks_to_read = last_block_idx - first_block_idx + 1
+
+        # Allocate space for raw audio data from the blocks.
+        block_data = bytearray(n_blocks_to_read * self.buffer_size_bytes)
+
+        # Read the necessary blocks and concatenate their payloads (ignore headers).
+        for block_idx in range(first_block_idx, last_block_idx + 1):
+            # Determine where to copy the block data in the allocated bytearray.
+            relative_block_idx = block_idx - first_block_idx
+            block_start = relative_block_idx * self.buffer_size_bytes
+            block_end = block_start + self.buffer_size_bytes
+
+            # Read the block and copy its data.
+            block_data[block_start:block_end] = self._read_block(block_idx)
+
+        # Unpack the audio data from the read blocks to (n_channels, n_samples) array.
+        unpacked_audio = self._unpack_audio(block_data, n_blocks_to_read)
+
+        # Because we might have read more samples than requested (we read whole blocks),
+        # determine the correct slice to return.
+        first_block_start_sample = (
+            first_block_idx * self._n_samples_per_channel_per_buffer
+        )
+        copy_start = start_sample - first_block_start_sample
+        copy_end = copy_start + n_samples_to_read
+
+        return unpacked_audio[:, copy_start:copy_end]
+
+    def _read_block(self, block_idx: int) -> bytes:
+        """Read the raw audio data from the specified block in the file."""
+        # Seek to the beginning of the block.
+        block_pos = self._audio_block_positions[block_idx]
+        self._data_file.seek(block_pos, 0)
+
+        # Read the block data.
+        return self._data_file.read(self.buffer_size_bytes)
+
+    def _unpack_audio(
+        self, audio_bytes: bytearray, n_blocks: int
+    ) -> npt.NDArray[np.float32]:
+        """Unpack given raw audio bytes from adjacent blocks.
+
+        Parameters
+        ----------
+        audio_bytes : bytes
+            Raw audio bytes from adjacent blocks to unpack.
+        n_blocks : int
+            Number of blocks contained in audio_bytes.
+
+        Returns
+        -------
+        npt.NDArray[np.float32]
+            A 2D array of shape (n_channels, n_samples) containing the unpacked audio
+            data.
+        """
+        n_samples_per_channel = self._n_samples_per_channel_per_buffer * n_blocks
+        total_samples = n_samples_per_channel * self.n_channels
+
+        # Create a format string for unpacking all samples at once.
+        endian_char = self.format_string[0]
+        sample_type = self.format_string[1]
+        bulk_format_string = f"{endian_char}{total_samples}{sample_type}"
+
+        unpacked_samples = struct.unpack(bulk_format_string, audio_bytes)
+        # Convert the tuple to numpy array.
+        audio = np.array(unpacked_samples, dtype=np.float32)
+
+        # Reshape (n_channels, n_samples) layout.
+        # The data is interleaved, so reshape to (n_samples, n_channels) first
+        # and then transpose.
+        return audio.reshape(n_samples_per_channel, self.n_channels).T
+
     def _get_bit_depth(self, format_string: str) -> int:
         """Get the bit depth from the format string."""
         # Dictionary mapping format characters to bit depths
@@ -561,12 +658,14 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         # Create an array that contains the indices of the last sample in each buffer.
         # These indices correspond to the timestamps we have.
         buffer_end_indices = np.arange(
-            self._n_samples_per_buffer - 1, self.n_samples, self._n_samples_per_buffer
+            self._n_samples_per_channel_per_buffer - 1,
+            self.n_samples,
+            self._n_samples_per_channel_per_buffer,
         )
 
         # Prepare arrays to hold the regression errors and the computed timestamps.
-        regression_errors = -np.ones(self._n_blocks)
-        audio_timestamps_ms = -np.ones(self.n_samples)
+        regression_errors = -np.ones(self._n_blocks, dtype=np.float32)
+        audio_timestamps_ms = -np.ones(self.n_samples, dtype=np.float32)
 
         # Split the data into segments for piecewise linear regression.
         split_indices = list(
