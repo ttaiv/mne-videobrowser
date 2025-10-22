@@ -27,8 +27,6 @@ def main() -> None:
     )
 
     audio = AudioFileHelsinkiVideoMEG(audio_path)
-    audio.unpack_audio()
-
     audio.print_stats()
 
     app = QApplication([])

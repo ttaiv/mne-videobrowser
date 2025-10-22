@@ -45,7 +45,6 @@ def main() -> None:
     audio = AudioFileHelsinkiVideoMEG(
         op.join(BASE_PATH, "2025-07-11--18-18-41_audio_00.aud")
     )
-    audio.unpack_audio()
 
     for video in [video1, video2]:
         video.print_stats()
