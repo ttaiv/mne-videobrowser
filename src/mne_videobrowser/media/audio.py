@@ -308,7 +308,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
         self._n_blocks = (end_data - begin_data) // first_block_size
         self.raw_audio = bytearray(self._n_blocks * self.buffer_size_bytes)
-        self.buffer_timestamps_ms = np.zeros(self._n_blocks)
+        self.buffer_timestamps_ms = np.zeros(self._n_blocks, dtype=np.int64)
         self._audio_block_positions: list[int] = []
 
         for i in range(self._n_blocks):
