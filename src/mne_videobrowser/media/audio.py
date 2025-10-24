@@ -243,14 +243,8 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     In addition to the properties of AudioFile interface, the following
     attributes are available:
         buffer_timestamps_ms  - buffers' timestamps (unix time in milliseconds)
-        raw_audio             - raw audio data
         format_string         - format string for the audio data
         buffer_size           - buffer size (bytes)
-
-    To access the unpacked audio data ((n_channels, n_samples) numpy array) and its
-    timestamps, call `unpack_audio()` method and then use the getter methods.
-    Timestamps that can be used for synchronization are available via
-    `get_audio_timestamps()` method.
 
     Parameters
     ----------
@@ -272,7 +266,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     ) -> None:
         super().__init__(fname)
         self._regression_segment_length = regression_segment_length
-        # Open the file to parse metadata and read the audio bytes into memory.
+
         self._data_file = open(self._fname, "rb")
         # Check the magic string
         if not self._data_file.read(len(magic_str)) == magic_str.encode("utf8"):
@@ -280,15 +274,19 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
                 f"File {fname} does not start with the expected "
                 f"magic string: {magic_str}."
             )
+
+        # Read properties from the file header.
         self.ver = struct.unpack("I", self._data_file.read(4))[0]
         if self.ver != 0:
-            # Can only read version 0 for the time being
+            # Can only read version 0.
             raise UnknownVersionError()
 
         self._sampling_rate, self._n_channels = struct.unpack(
             "II", self._data_file.read(8)
         )
         self.format_string = self._data_file.read(2).decode("ascii")
+
+        # Now file position is at the beginning of audio data blocks.
 
         begin_data = self._data_file.tell()
         self._data_file.seek(0, 2)  # seek to end of file
@@ -304,25 +302,29 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         self.buffer_size_bytes = first_payload_size  # size of audio data in one block
         self._data_file.seek(begin_data, 0)  # return to beginning
 
-        assert (end_data - begin_data) % first_block_size == 0
+        if not (end_data - begin_data) % first_block_size == 0:
+            raise ValueError(
+                "Audio data size is not a multiple of block size. "
+                "The audio file may be corrupted."
+            )
 
+        # Read the positions and timestamps of all audio blocks.
         self._n_blocks = (end_data - begin_data) // first_block_size
-        self.raw_audio = bytearray(self._n_blocks * self.buffer_size_bytes)
         self.buffer_timestamps_ms = np.zeros(self._n_blocks, dtype=np.int64)
         self._audio_block_positions: list[int] = []
-
         for i in range(self._n_blocks):
             timestamp, payload_size, block_size = read_block_attributes(
                 self._data_file, self.ver
             )
-            assert block_size == first_block_size, (
-                "Inconsistent block size while reading audio data."
-                f" Expected {first_block_size}, got {block_size}."
-            )
+            if block_size != first_block_size:
+                raise ValueError(
+                    "Inconsistent block size while reading audio data. First block size"
+                    f" was {first_block_size} bytes, but block {i} size is"
+                    f" {block_size} bytes."
+                )
             self._audio_block_positions.append(self._data_file.tell())
-            self._data_file.seek(payload_size, 1)  # skip the audio data
+            self._data_file.seek(payload_size, 1)  # skip actual audio data (payload)
             self.buffer_timestamps_ms[i] = timestamp
-        # close the file
 
         # Make sure that the timestamps are increasing
         if not np.all(np.diff(self.buffer_timestamps_ms) >= 0):
@@ -340,9 +342,10 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         # from all channels.
         one_sample_from_all_channels_size = self._n_channels * self._n_bytes_per_sample
 
-        assert self.buffer_size_bytes % one_sample_from_all_channels_size == 0, (
-            "Audio buffer size is not a multiple of one sample from all channels."
-        )
+        if not self.buffer_size_bytes % one_sample_from_all_channels_size == 0:
+            raise ValueError(
+                "Audio buffer size is not a multiple of one sample from all channels."
+            )
         self._n_samples_per_channel_per_buffer = (
             self.buffer_size_bytes // one_sample_from_all_channels_size
         )
@@ -374,12 +377,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         -------
         npt.NDArray[np.float32]
             A 2D array of shape (n_channels, n_samples) containing the audio data.
-        """
-        """
-        self._ensure_unpacked_audio()
-        assert self._unpacked_audio is not None, (
-            "Audio data should be unpacked after calling _ensure_unpacked_audio."
-        )
         """
         return self._get_audio_samples(
             sample_range if sample_range is not None else (0, self.n_samples)
@@ -502,7 +499,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
         Parameters
         ----------
-        audio_bytes : bytes
+        audio_bytes : bytearray
             Raw audio bytes from adjacent blocks to unpack.
         n_blocks : int
             Number of blocks contained in audio_bytes.
