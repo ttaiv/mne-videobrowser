@@ -562,16 +562,9 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             data.
         """
         n_samples_per_channel = self._n_samples_per_channel_per_buffer * n_blocks
-        total_samples = n_samples_per_channel * self.n_channels
+        dtype = self._get_numpy_dtype()
 
-        # Create a format string for unpacking all samples at once.
-        endian_char = self.format_string[0]
-        sample_type = self.format_string[1]
-        bulk_format_string = f"{endian_char}{total_samples}{sample_type}"
-
-        unpacked_samples = struct.unpack(bulk_format_string, audio_bytes)
-        # Convert the tuple to numpy array.
-        audio = np.array(unpacked_samples, dtype=np.float32)
+        audio = np.frombuffer(audio_bytes, dtype=dtype).astype(np.float32)
 
         # Reshape (n_channels, n_samples) layout.
         # The data is interleaved, so reshape to (n_samples, n_channels) first
@@ -604,6 +597,47 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
                 f"string {format_string}"
             )
         return bit_depth_map[bit_depth_char]
+
+    def _get_numpy_dtype(self) -> np.dtype:
+        """Construct numpy dtype from the format string."""
+        # Determine the data type for numpy based on the format string.
+        dtype_map = {
+            "b": np.int8,
+            "B": np.uint8,
+            "h": np.int16,
+            "H": np.uint16,
+            "i": np.int32,
+            "I": np.uint32,
+            "l": np.int32,
+            "L": np.uint32,
+            "q": np.int64,
+            "Q": np.uint64,
+            "f": np.float32,
+            "d": np.float64,
+        }
+        sample_type = self.format_string[1]
+        if sample_type not in dtype_map:
+            raise ValueError(
+                f"Unsupported sample type character: {sample_type} in format "
+                f"string {self.format_string}"
+            )
+        numpy_dtype = np.dtype(dtype_map[sample_type])
+        # Handle endianness.
+        endian_char = self.format_string[0]
+        if endian_char == "<":
+            numpy_dtype = numpy_dtype.newbyteorder("<")
+        elif endian_char == ">":
+            numpy_dtype = numpy_dtype.newbyteorder(">")
+        elif endian_char in ("=", "@"):
+            # Native endianness
+            numpy_dtype = numpy_dtype.newbyteorder("=")
+        else:
+            raise ValueError(
+                f"Unsupported endianness character: {endian_char} in format "
+                f"string {self.format_string}"
+            )
+
+        return numpy_dtype
 
     def _compute_audio_timestamps(self) -> None:
         """Transform sparse buffer timestamps into dense sample timestamps.
