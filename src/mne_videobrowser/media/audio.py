@@ -451,11 +451,17 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             raise ValueError("Invalid sample range: start must be less than end.")
 
         n_samples_to_read = end_sample - start_sample
+        duration_to_read = n_samples_to_read / self.sampling_rate
 
         # Determine which blocks to read.
         first_block_idx = start_sample // self._n_samples_per_channel_per_buffer
         last_block_idx = (end_sample - 1) // self._n_samples_per_channel_per_buffer
         n_blocks_to_read = last_block_idx - first_block_idx + 1
+
+        logger.debug(
+            f"Reading {duration_to_read:.2f} seconds ({n_samples_to_read} samples) of "
+            f"audio data from blocks {first_block_idx} to {last_block_idx}."
+        )
 
         # Allocate space for raw audio data from the blocks.
         block_data = bytearray(n_blocks_to_read * self.buffer_size_bytes)
