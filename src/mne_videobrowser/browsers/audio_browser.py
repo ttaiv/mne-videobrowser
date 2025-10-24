@@ -490,6 +490,8 @@ class AudioBrowser(SyncableBrowserWidget):
         self._playing_rate = audio_player.find_sample_rate_for_playing(
             original_rate=audio.sampling_rate
         )
+        # For normalizing the audio during playback
+        self._audio_max = audio.get_global_max_amplitude()
 
         # Create a timer that will be used to update the visualization during playback.
         self._playback_timer = QTimer(self)
@@ -674,6 +676,8 @@ class AudioBrowser(SyncableBrowserWidget):
             self._playback_audio_data = self._audio.resample_poly(
                 self._playing_rate, channel_idx=channel_idx
             )
+        # Normalize the audio to play it properly.
+        self._playback_audio_data /= self._audio_max
 
     @Slot()
     def _on_playback_timeout(self) -> None:

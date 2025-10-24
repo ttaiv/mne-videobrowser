@@ -63,6 +63,22 @@ class AudioFile(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_global_max_amplitude(self, chunk_duration_seconds: float = 5) -> float:
+        """Get the maximum absolute amplitude across all channels in the audio file.
+
+        Parameters
+        ----------
+        chunk_duration_seconds : float
+            Duration of each chunk (in seconds) to read and process at a time.
+            Default is 5 seconds.
+
+        Returns
+        -------
+        float
+            The maximum absolute amplitude found in the audio file.
+        """
+
     def get_min_max_envelope(
         self,
         window_size: int,
@@ -416,6 +432,35 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             A 1D array containing timestamps for all audio samples in milliseconds.
         """
         return self._audio_timestamps_ms
+
+    def get_global_max_amplitude(self, chunk_duration_seconds: float = 5) -> float:
+        """Get the maximum absolute amplitude across all channels in the audio file.
+
+        Parameters
+        ----------
+        chunk_duration_seconds : float
+            Duration of each chunk (in seconds) to read and process at a time.
+            Default is 5 seconds.
+
+        Returns
+        -------
+        float
+            The maximum absolute amplitude found in the audio file.
+        """
+        if chunk_duration_seconds <= 0:
+            raise ValueError("Chunk duration must be a positive number.")
+
+        n_samples_per_chunk = int(chunk_duration_seconds * self.sampling_rate)
+
+        max_amplitude = 0.0
+        for start_sample in range(0, self.n_samples, n_samples_per_chunk):
+            end_sample = min(start_sample + n_samples_per_chunk, self.n_samples)
+            audio_chunk = self._get_audio_samples((start_sample, end_sample))
+            chunk_max = np.max(np.abs(audio_chunk))
+            if chunk_max > max_amplitude:
+                max_amplitude = chunk_max
+
+        return float(max_amplitude)
 
     @property
     def sampling_rate(self) -> int:
