@@ -408,7 +408,7 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         )
         return audio_all_channels.mean(axis=0)
 
-    def get_audio_timestamps_ms(self) -> npt.NDArray[np.float32]:
+    def get_audio_timestamps_ms(self) -> npt.NDArray[np.float64]:
         """Get timestamps for all audio samples in milliseconds.
 
         Triggers unpacking of audio data if it has not been done yet.
@@ -572,8 +572,9 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         )
 
         # Prepare arrays to hold the regression errors and the computed timestamps.
-        regression_errors = -np.ones(self._n_blocks, dtype=np.float32)
-        audio_timestamps_ms = -np.ones(self.n_samples, dtype=np.float32)
+        regression_errors = -np.ones(self._n_blocks, dtype=np.float64)
+        # Double precision is important here!
+        audio_timestamps_ms = -np.ones(self.n_samples, dtype=np.float64)
 
         # Split the data into segments for piecewise linear regression.
         split_indices = list(
