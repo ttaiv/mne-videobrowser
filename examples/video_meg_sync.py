@@ -8,25 +8,13 @@ import logging
 import os.path as op
 
 import mne
-import numpy as np
-from numpy.typing import NDArray
 
 from mne_videobrowser import (
     TimestampAligner,
     VideoFileHelsinkiVideoMEG,
     browse_raw_with_video,
-    comp_tstamps,
+    compute_raw_timestamps,
 )
-
-
-def get_raw_timestamps(raw: mne.io.Raw, timing_channel: str) -> NDArray[np.floating]:
-    """Get the timestamps from raw data having Helsinki videoMEG timing channel."""
-    timing_data = raw.get_data(picks=timing_channel, return_times=False)
-    # Remove the channel dimension
-    # Ignoring warning about timing_data possibly being tuple,
-    # as we do not ask times from raw.get_data.
-    timing_data = timing_data.squeeze()  # type: ignore
-    return comp_tstamps(timing_data, raw.info["sfreq"])
 
 
 def main() -> None:
@@ -53,7 +41,7 @@ def main() -> None:
     )
 
     # Extract raw and video timestamps
-    raw_timestamps_ms = get_raw_timestamps(raw, RAW_TIMING_CHANNEL)
+    raw_timestamps_ms = compute_raw_timestamps(raw, RAW_TIMING_CHANNEL)
     video_timestamps_ms = video_file.timestamps_ms
 
     # Set up mapping between raw data points and video frames

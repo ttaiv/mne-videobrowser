@@ -2,8 +2,13 @@
 
 # License: BSD-3-Clause
 # Copyright (c) 2014 BioMag Laboratory, Helsinki University Central Hospital
+# Copyright (c) 2025 Aalto University
 
+import logging
+
+import mne
 import numpy as np
+import numpy.typing as npt
 
 # Parameters for detecting timestamps. Should match the parameters used for
 # generating the timing sequence
@@ -11,6 +16,34 @@ _BASELINE = 5  # seconds
 _TRAIN_INTRVL = 10  # seconds
 _TRAIN_STEP = 0.015  # seconds
 _NBITS = 43  # including the parity bit
+
+logger = logging.getLogger(__name__)
+
+
+def compute_raw_timestamps(
+    raw: mne.io.Raw, timing_channel: str
+) -> npt.NDArray[np.float64]:
+    """Get the timestamps from raw data having Helsinki videoMEG timing channel.
+
+    Parameters
+    ----------
+    raw : mne.io.Raw
+        The raw data object.
+    timing_channel : str
+        Channel name string for the timing channel.
+
+    Returns
+    -------
+    NDArray[np.float64]
+        Array of timestamps corresponding to each sample in the raw data.
+    """
+    timing_data = raw.get_data(picks=timing_channel, return_times=False)
+    assert isinstance(timing_data, np.ndarray), (
+        "With return_times=False, timing data should be an ndarray"
+    )
+    timing_data = timing_data.squeeze()  # remove the channel dimension
+
+    return _comp_tstamps(timing_data, raw.info["sfreq"])
 
 
 def _read_timestamp(dtrigs, cur, step, nbits):
@@ -22,14 +55,14 @@ def _read_timestamp(dtrigs, cur, step, nbits):
     parity = False
 
     if cur + nbits >= len(dtrigs):
-        print("end of input reached before all the bits read")
+        logger.warning("end of input reached before all the bits read")
         return -1
 
     # Read the bits
     for i in range(nbits):
         # check the interval between the two triggers
         if (dtrigs[cur + i + 1] < step * 1.5) or (dtrigs[cur + i + 1] > step * 4.5):
-            print("invalid interval between two triggers")
+            logger.warning("invalid interval between two triggers")
             return -1
 
         # check whether the next bit is 0 or 1
@@ -40,13 +73,13 @@ def _read_timestamp(dtrigs, cur, step, nbits):
                 ts = ts + 2**i
 
     if parity:
-        print("parity check failed")
+        logger.warning("parity check failed")
         return -1
     else:
         return ts
 
 
-def _comp_tstamps_1bit(inp, sfreq):
+def _comp_tstamps_1bit(inp, sfreq) -> npt.NDArray[np.float64]:
     """Extract timestamps from a "normal" (not composite) trigger channel.
 
     Parameters
@@ -96,15 +129,22 @@ def _comp_tstamps_1bit(inp, sfreq):
     data_tstamps = np.polyval(p, np.arange(len(inp)))
     errs = np.abs(np.polyval(p, samps) - tss)
 
-    print(
-        f"comp_tstamps: regression fit errors (abs): mean {errs.mean():f}, median "
-        f"{np.median(errs):f}, max {errs.max():f}"
+    if data_tstamps.dtype != np.float64:
+        logger.warning(
+            f"Data type of raw data timestamps is {data_tstamps.dtype}, "
+            "converting to float64"
+        )
+    data_tstamps = data_tstamps.astype(np.float64)
+
+    logger.info(
+        f"Raw timestamp computation: regression fit errors (abs): mean {errs.mean():f},"
+        f" median {np.median(errs):f}, max {errs.max():f}"
     )
 
     return data_tstamps
 
 
-def comp_tstamps(inp, sfreq):
+def _comp_tstamps(inp, sfreq) -> npt.NDArray[np.float64]:
     """Extract timestamps from a trigger channel.
 
     Parameters
