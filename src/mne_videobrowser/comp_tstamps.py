@@ -2,6 +2,7 @@
 
 # License: BSD-3-Clause
 # Copyright (c) 2014 BioMag Laboratory, Helsinki University Central Hospital
+# Copyright (c) 2025 Aalto University
 
 import logging
 
