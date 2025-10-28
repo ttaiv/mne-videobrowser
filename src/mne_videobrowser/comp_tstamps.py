@@ -29,14 +29,14 @@ def _read_timestamp(dtrigs, cur, step, nbits):
     parity = False
 
     if cur + nbits >= len(dtrigs):
-        print("end of input reached before all the bits read")
+        logger.warning("end of input reached before all the bits read")
         return -1
 
     # Read the bits
     for i in range(nbits):
         # check the interval between the two triggers
         if (dtrigs[cur + i + 1] < step * 1.5) or (dtrigs[cur + i + 1] > step * 4.5):
-            print("invalid interval between two triggers")
+            logger.warning("invalid interval between two triggers")
             return -1
 
         # check whether the next bit is 0 or 1
@@ -47,7 +47,7 @@ def _read_timestamp(dtrigs, cur, step, nbits):
                 ts = ts + 2**i
 
     if parity:
-        print("parity check failed")
+        logger.warning("parity check failed")
         return -1
     else:
         return ts
@@ -110,9 +110,9 @@ def _comp_tstamps_1bit(inp, sfreq) -> npt.NDArray[np.float64]:
         )
     data_tstamps = data_tstamps.astype(np.float64)
 
-    print(
-        f"comp_tstamps: regression fit errors (abs): mean {errs.mean():f}, median "
-        f"{np.median(errs):f}, max {errs.max():f}"
+    logger.info(
+        f"Raw timestamp computation: regression fit errors (abs): mean {errs.mean():f},"
+        f" median {np.median(errs):f}, max {errs.max():f}"
     )
 
     return data_tstamps
