@@ -3,7 +3,11 @@
 # License: BSD-3-Clause
 # Copyright (c) 2014 BioMag Laboratory, Helsinki University Central Hospital
 
+import logging
+
+import mne
 import numpy as np
+import numpy.typing as npt
 
 # Parameters for detecting timestamps. Should match the parameters used for
 # generating the timing sequence
@@ -11,6 +15,8 @@ _BASELINE = 5  # seconds
 _TRAIN_INTRVL = 10  # seconds
 _TRAIN_STEP = 0.015  # seconds
 _NBITS = 43  # including the parity bit
+
+logger = logging.getLogger(__name__)
 
 
 def _read_timestamp(dtrigs, cur, step, nbits):
@@ -46,7 +52,7 @@ def _read_timestamp(dtrigs, cur, step, nbits):
         return ts
 
 
-def _comp_tstamps_1bit(inp, sfreq):
+def _comp_tstamps_1bit(inp, sfreq) -> npt.NDArray[np.float64]:
     """Extract timestamps from a "normal" (not composite) trigger channel.
 
     Parameters
@@ -96,6 +102,13 @@ def _comp_tstamps_1bit(inp, sfreq):
     data_tstamps = np.polyval(p, np.arange(len(inp)))
     errs = np.abs(np.polyval(p, samps) - tss)
 
+    if data_tstamps.dtype != np.float64:
+        logger.warning(
+            f"Data type of raw data timestamps is {data_tstamps.dtype}, "
+            "converting to float64"
+        )
+    data_tstamps = data_tstamps.astype(np.float64)
+
     print(
         f"comp_tstamps: regression fit errors (abs): mean {errs.mean():f}, median "
         f"{np.median(errs):f}, max {errs.max():f}"
@@ -104,7 +117,7 @@ def _comp_tstamps_1bit(inp, sfreq):
     return data_tstamps
 
 
-def comp_tstamps(inp, sfreq):
+def comp_tstamps(inp, sfreq) -> npt.NDArray[np.float64]:
     """Extract timestamps from a trigger channel.
 
     Parameters
