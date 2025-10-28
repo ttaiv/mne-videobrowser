@@ -13,6 +13,7 @@ from mne_videobrowser import (
     TimestampAligner,
     VideoFileHelsinkiVideoMEG,
     browse_raw_with_video,
+    compute_raw_timestamps,
 )
 
 
@@ -40,8 +41,7 @@ def main() -> None:
     )
 
     # Extract raw and video timestamps
-    raw_timestamps_ms = get_raw_timestamps(raw, RAW_TIMING_CHANNEL)
-
+    raw_timestamps_ms = compute_raw_timestamps(raw, RAW_TIMING_CHANNEL)
     video_timestamps_ms = video_file.timestamps_ms
 
     # Set up mapping between raw data points and video frames
