@@ -20,6 +20,32 @@ _NBITS = 43  # including the parity bit
 logger = logging.getLogger(__name__)
 
 
+def compute_raw_timestamps(
+    raw: mne.io.Raw, timing_channel: str
+) -> npt.NDArray[np.float64]:
+    """Get the timestamps from raw data having Helsinki videoMEG timing channel.
+
+    Parameters
+    ----------
+    raw : mne.io.Raw
+        The raw data object.
+    timing_channel : str
+        Channel name string for the timing channel.
+
+    Returns
+    -------
+    NDArray[np.float64]
+        Array of timestamps corresponding to each sample in the raw data.
+    """
+    timing_data = raw.get_data(picks=timing_channel, return_times=False)
+    assert isinstance(timing_data, np.ndarray), (
+        "With return_times=False, timing data should be an ndarray"
+    )
+    timing_data = timing_data.squeeze()  # remove the channel dimension
+
+    return _comp_tstamps(timing_data, raw.info["sfreq"])
+
+
 def _read_timestamp(dtrigs, cur, step, nbits):
     """Read and decode one timestamp.
 
@@ -118,7 +144,7 @@ def _comp_tstamps_1bit(inp, sfreq) -> npt.NDArray[np.float64]:
     return data_tstamps
 
 
-def comp_tstamps(inp, sfreq) -> npt.NDArray[np.float64]:
+def _comp_tstamps(inp, sfreq) -> npt.NDArray[np.float64]:
     """Extract timestamps from a trigger channel.
 
     Parameters
@@ -141,29 +167,3 @@ def comp_tstamps(inp, sfreq) -> npt.NDArray[np.float64]:
             inp = inp // 2
 
     raise Exception("No timing information found")
-
-
-def compute_raw_timestamps(
-    raw: mne.io.Raw, timing_channel: str
-) -> npt.NDArray[np.float64]:
-    """Get the timestamps from raw data having Helsinki videoMEG timing channel.
-
-    Parameters
-    ----------
-    raw : mne.io.Raw
-        The raw data object.
-    timing_channel : str
-        Channel name string for the timing channel.
-
-    Returns
-    -------
-    NDArray[np.float64]
-        Array of timestamps corresponding to each sample in the raw data.
-    """
-    timing_data = raw.get_data(picks=timing_channel, return_times=False)
-    assert isinstance(timing_data, np.ndarray), (
-        "With return_times=False, timing data should be an ndarray"
-    )
-    timing_data = timing_data.squeeze()  # remove the channel dimension
-
-    return comp_tstamps(timing_data, raw.info["sfreq"])
