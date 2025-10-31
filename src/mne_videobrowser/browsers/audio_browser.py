@@ -151,8 +151,8 @@ class AudioView(QWidget):
         # Current time gets updated based on the sample index.
 
         self._time_selector.set_selected_time_no_signal(self.current_time)
+        self._move_view_to_current_time()  # important to call before _replot_if_needed!
         self._replot_if_needed()
-        self._move_view_to_current_time()
         self._time_label.set_current_time(self.current_time)
 
         if signal:
@@ -334,16 +334,23 @@ class AudioView(QWidget):
             self._plot_widget.setXRange(new_min, new_max, padding=0)  # type: ignore
 
     def _replot_if_needed(self) -> None:
-        """Ensure that the currently selected sample is within the plotted range."""
-        current_sample = self._current_sample
+        """Replot if the visible window is outside the currently plotted range."""
+        # Get current view range in time
+        window_min_time, window_max_time = self._plot_widget.viewRange()[0]
+        # Convert view times to sample indices
+        window_min_sample = int(window_min_time * self._audio.sampling_rate)
+        window_max_sample = int(window_max_time * self._audio.sampling_rate)
+
         if (
-            self._current_sample < self._plotted_range[0]
-            or self._current_sample > self._plotted_range[1]
+            window_min_sample < self._plotted_range[0]
+            or window_max_sample > self._plotted_range[1]
         ):
+            # Current window contains samples outside the plotted range, re-plot needed.
             logger.debug(
-                f"Current sample {current_sample} is not within the plotted range "
-                f"{self._plotted_range}. Re-plotting."
+                f"Current view range is [{window_min_sample}, {window_max_sample}] "
+                f"but plotted range is {self._plotted_range}. Re-plotting audio."
             )
+            # Center the new plotted range around the current sample.
             new_start_sample = max(
                 0,
                 self._current_sample - self._n_samples_to_plot // 2,
