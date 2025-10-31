@@ -25,6 +25,26 @@ class AudioFile(ABC):
         """Initialize the audio file reader with the given file name."""
         self._fname = fname
 
+    def __del__(self) -> None:
+        """Ensure the audio file is released when the object is deleted."""
+        self.close()
+
+    def __enter__(self) -> "AudioFile":
+        """Enter the runtime context with opened audio file."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Exit the runtime context and release the audio file."""
+        self.close()
+
+    @abstractmethod
+    def close(self) -> None:
+        """Release any resources held by the audio file.
+
+        Should be safe to call multiple times.
+        """
+        pass
+
     @abstractmethod
     def get_audio_all_channels(
         self, sample_range: tuple[int, int] | None = None
@@ -388,13 +408,13 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
         self._compute_audio_timestamps()  # will set self._audio_timestamps_ms
 
-    def __del__(self) -> None:
-        """Destructor to ensure the audio file is closed."""
-        self.close()
-
     def close(self) -> None:
         """Close the audio file."""
-        self._data_file.close()
+        if hasattr(self, "_data_file") and not self._data_file.closed:
+            try:
+                self._data_file.close()
+            except Exception as e:
+                logger.warning(f"Error closing audio file {self._fname}: {e}")
 
     def get_audio_all_channels(
         self, sample_range: tuple[int, int] | None = None
