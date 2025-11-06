@@ -88,6 +88,11 @@ class TimestampAligner:
     # Threshold for warning about difference between start/end times of the timestamps
     _WARNING_THRESHOLD_MS = 1000
 
+    # Values for marking failed mappings in the internal mapping arrays
+    _FAILURE_INDEX_TOO_SMALL = -1
+    _FAILURE_INDEX_TOO_LARGE = -2
+    _NOT_MAPPED = -3
+
     def __init__(
         self,
         timestamps_a: NDArray[np.floating],
@@ -112,12 +117,12 @@ class TimestampAligner:
         # Precompute mapping from timestamps a to b and vice versa.
 
         logger.info(f"Building mapping from {name_a} to {name_b}.")
-        self._mapping_ab: dict[int, MappingResult] = self._build_mapping(
+        self._mapping_ab = self._build_mapping(
             source_timestamps_ms=self._timestamps_a_ms,
             target_timestamps_ms=self._timestamps_b_ms,
         )
         logger.info(f"Building mapping from {name_b} to {name_a}.")
-        self._mapping_ba: dict[int, MappingResult] = self._build_mapping(
+        self._mapping_ba = self._build_mapping(
             source_timestamps_ms=self._timestamps_b_ms,
             target_timestamps_ms=self._timestamps_a_ms,
         )
@@ -132,11 +137,13 @@ class TimestampAligner:
 
     def a_index_to_b_index(self, a_idx: int) -> MappingResult:
         """Map an index in `timestamps_a` to the closest index in `timestamps_b`."""
-        return self._mapping_ab[a_idx]
+        result = self._mapping_ab[a_idx]
+        return self._decode_mapping_result(result)
 
     def b_index_to_a_index(self, b_idx: int) -> MappingResult:
         """Map an index in `timestamps_b` to the closest index in `timestamps_a`."""
-        return self._mapping_ba[b_idx]
+        result = self._mapping_ba[b_idx]
+        return self._decode_mapping_result(result)
 
     def _validate_input_times(self) -> None:
         if not np.all(np.diff(self._timestamps_a_ms) >= 0):
@@ -309,7 +316,7 @@ class TimestampAligner:
         self,
         source_timestamps_ms: NDArray[np.floating],
         target_timestamps_ms: NDArray[np.floating],
-    ) -> dict[int, MappingResult]:
+    ) -> NDArray[np.int32]:
         """Build a mapping from source indices to target indices.
 
         Parameters
@@ -323,14 +330,18 @@ class TimestampAligner:
 
         Returns
         -------
-        dict[int, MappingResult]
-            A dictionary mapping source indices to mapping results.
-            If a source timestamp is out of bounds of the target timestamps,
-            it will be marked as a failure with a reason for the failure
-            (index too small or index too large).
+        NDArray[np.int32]
+            1-D array where each element corresponds to a source timestamp.
+            Non-negative values are indices of the closest target timestamps.
+            Negative sentinel values indicate mapping failures.
         """
-        # Initialize a list of mapping results with failures
-        mapping: dict[int, MappingResult] = {}
+        # Initialize mapping results with not mapped values.
+        mapping = np.full(
+            shape=source_timestamps_ms.shape,
+            fill_value=self._NOT_MAPPED,
+            dtype=np.int32,
+        )
+
         # Find indices of source timestamps that are out of bounds of the target
         # timestamps. Use half of the average interval between target timestamps
         # as a threshold to determine if a source timestamp is too small or too large.
@@ -339,27 +350,17 @@ class TimestampAligner:
         too_small_mask = source_timestamps_ms < (
             target_timestamps_ms[0] - average_target_interval_ms / 2
         )
-        too_small_source_indices = too_small_mask.nonzero()[0]
         too_large_mask = source_timestamps_ms > (
             target_timestamps_ms[-1] + average_target_interval_ms / 2
         )
-        too_large_source_indices = too_large_mask.nonzero()[0]
-
-        # Add these to the mapping as failures
-        for source_idx in too_small_source_indices:
-            mapping[source_idx] = MappingFailure(
-                failure_reason=MapFailureReason.INDEX_TOO_SMALL
-            )
-        for source_idx in too_large_source_indices:
-            mapping[source_idx] = MappingFailure(
-                failure_reason=MapFailureReason.INDEX_TOO_LARGE
-            )
+        # Mark the failed mappings.
+        mapping[too_small_mask] = self._FAILURE_INDEX_TOO_SMALL
+        mapping[too_large_mask] = self._FAILURE_INDEX_TOO_LARGE
 
         # Map the rest of source timestamps to the closest target timestamps.
 
         valid_mask = ~(too_small_mask | too_large_mask)
         valid_source_timestamps_ms = source_timestamps_ms[valid_mask]
-        valid_source_indices = valid_mask.nonzero()[0]
 
         closest_target_indices = self._find_indices_with_closest_values(
             source_times=valid_source_timestamps_ms, target_times=target_timestamps_ms
@@ -370,19 +371,40 @@ class TimestampAligner:
         )
         self._log_mapping_errors(errors_ms)
 
-        for source_idx, result in zip(valid_source_indices, closest_target_indices):
-            # Use .item() to convert numpy scalar to a native Python int or float.
-            mapping[source_idx] = MappingSuccess(result=result.item())
+        mapping[valid_mask] = closest_target_indices
 
         # Make sure that all the source indices were mapped.
-        assert len(mapping) == len(source_timestamps_ms), (
-            "Mapping should cover all the source indices."
+        assert np.all(mapping != self._NOT_MAPPED), (
+            "All the source indices should be mapped."
         )
-
         return mapping
 
+    def _decode_mapping_result(self, encoded_result: int) -> MappingResult:
+        """Decode a mapping result from the array representation.
+
+        Parameters
+        ----------
+        encoded_result : int
+            The encoded result from the mapping array.
+            Non-negative values are successful mappings.
+            Negative sentinel values indicate failures.
+
+        Returns
+        -------
+        MappingResult
+            The decoded mapping result.
+        """
+        if encoded_result >= 0:
+            return MappingSuccess(result=int(encoded_result))
+        elif encoded_result == self._FAILURE_INDEX_TOO_SMALL:
+            return MappingFailure(failure_reason=MapFailureReason.INDEX_TOO_SMALL)
+        elif encoded_result == self._FAILURE_INDEX_TOO_LARGE:
+            return MappingFailure(failure_reason=MapFailureReason.INDEX_TOO_LARGE)
+        else:
+            raise ValueError(f"Unknown encoded result: {encoded_result}")
+
     def _log_mapping_results(
-        self, mapping_results: dict[int, MappingResult], header: str
+        self, mapping_results: NDArray[np.int32], header: str
     ) -> None:
         """Log the number of each mapping result for debugging purposes."""
         result_counts = self._count_mapping_results(mapping_results)
@@ -391,19 +413,22 @@ class TimestampAligner:
             logger.debug(f"    {result}: {count}")
 
     def _count_mapping_results(
-        self, mapping_results: dict[int, MappingResult]
+        self, mapping_results: NDArray[np.int32]
     ) -> Counter[str]:
         """Count the number of each mapping results for debugging purposes."""
         counts = Counter()
+        # Count successful mappings
+        success_count = np.sum(mapping_results >= 0)
+        if success_count > 0:
+            counts["MappingSuccess"] = int(success_count)
 
-        for mapping_result in mapping_results.values():
-            match mapping_result:
-                case MappingSuccess():
-                    key = "MappingSuccess"
-                case MappingFailure(failure_reason=reason):
-                    key = f"MappingFailure({reason.name})"
-                case _:
-                    raise ValueError(f"Unexpected mapping result: {mapping_result}")
-            counts[key] += 1
+        # Count failures
+        too_small_count = np.sum(mapping_results == self._FAILURE_INDEX_TOO_SMALL)
+        if too_small_count > 0:
+            counts["MappingFailure(INDEX_TOO_SMALL)"] = int(too_small_count)
+
+        too_large_count = np.sum(mapping_results == self._FAILURE_INDEX_TOO_LARGE)
+        if too_large_count > 0:
+            counts["MappingFailure(INDEX_TOO_LARGE)"] = int(too_large_count)
 
         return counts
