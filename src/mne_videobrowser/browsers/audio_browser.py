@@ -60,7 +60,7 @@ class AudioView(QWidget):
         audio: AudioFile,
         plotting_window_size: int | None = None,
         default_view_len: float = 10.0,
-        plotting_duration: float = 30.0,
+        plotting_duration: float = 60.0,
         time_selector_padding: float = 0.1,
         parent: QWidget | None = None,
     ) -> None:
