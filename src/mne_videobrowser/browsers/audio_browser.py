@@ -684,7 +684,8 @@ class AudioBrowser(SyncableBrowserWidget):
                 self._playing_rate, channel_idx=channel_idx
             )
         # Normalize the audio to play it properly.
-        self._playback_audio_data /= self._audio_max
+        if self._audio_max > 0:
+            self._playback_audio_data /= self._audio_max
 
     @Slot()
     def _on_playback_timeout(self) -> None:
