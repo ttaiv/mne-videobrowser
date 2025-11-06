@@ -137,11 +137,21 @@ class TimestampAligner:
 
     def a_index_to_b_index(self, a_idx: int) -> MappingResult:
         """Map an index in `timestamps_a` to the closest index in `timestamps_b`."""
+        if a_idx < 0 or a_idx >= len(self._timestamps_a_ms):
+            raise IndexError(
+                f"Index {a_idx} is out of bounds for timestamps_a "
+                f"with length {len(self._timestamps_a_ms)}."
+            )
         result = self._mapping_ab[a_idx]
         return self._decode_mapping_result(result)
 
     def b_index_to_a_index(self, b_idx: int) -> MappingResult:
         """Map an index in `timestamps_b` to the closest index in `timestamps_a`."""
+        if b_idx < 0 or b_idx >= len(self._timestamps_b_ms):
+            raise IndexError(
+                f"Index {b_idx} is out of bounds for timestamps_b "
+                f"with length {len(self._timestamps_b_ms)}."
+            )
         result = self._mapping_ba[b_idx]
         return self._decode_mapping_result(result)
 
