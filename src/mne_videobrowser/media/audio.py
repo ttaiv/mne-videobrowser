@@ -13,7 +13,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy import signal
 
-from .helsinki_videomeg_file_utils import UnknownVersionError, read_attrib
+from .helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,26 @@ class AudioFile(ABC):
     def __init__(self, fname: str) -> None:
         """Initialize the audio file reader with the given file name."""
         self._fname = fname
+
+    def __del__(self) -> None:
+        """Ensure the audio file is released when the object is deleted."""
+        self.close()
+
+    def __enter__(self) -> "AudioFile":
+        """Enter the runtime context with opened audio file."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Exit the runtime context and release the audio file."""
+        self.close()
+
+    @abstractmethod
+    def close(self) -> None:
+        """Release any resources held by the audio file.
+
+        Should be safe to call multiple times.
+        """
+        pass
 
     @abstractmethod
     def get_audio_all_channels(
@@ -62,6 +82,40 @@ class AudioFile(ABC):
             A 1D array containing the mean audio data for the specified sample range.
         """
         pass
+
+    def get_global_max_amplitude(self, chunk_duration_seconds: float = 5) -> float:
+        """Get the maximum absolute amplitude across all channels in the audio file.
+
+        Parameters
+        ----------
+        chunk_duration_seconds : float
+            Duration of each chunk (in seconds) to read and process at a time.
+            Default is 5 seconds.
+
+        Returns
+        -------
+        float
+            The maximum absolute amplitude found in the audio file.
+        """
+        if chunk_duration_seconds <= 0:
+            raise ValueError("Chunk duration must be a positive number.")
+
+        n_samples_per_chunk = int(chunk_duration_seconds * self.sampling_rate)
+
+        max_amplitude = 0.0
+        for start_sample in range(0, self.n_samples, n_samples_per_chunk):
+            # Ensure we don't go beyond the total number of samples.
+            end_sample = min(start_sample + n_samples_per_chunk, self.n_samples)
+
+            # Get (n_channels, n_samples) array for the chunk.
+            audio_chunk = self.get_audio_all_channels((start_sample, end_sample))
+
+            # Find and update the maximum amplitude.
+            chunk_max = np.max(np.abs(audio_chunk))
+            if chunk_max > max_amplitude:
+                max_amplitude = chunk_max
+
+        return float(max_amplitude)
 
     def get_min_max_envelope(
         self,
@@ -243,14 +297,8 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     In addition to the properties of AudioFile interface, the following
     attributes are available:
         buffer_timestamps_ms  - buffers' timestamps (unix time in milliseconds)
-        raw_audio             - raw audio data
         format_string         - format string for the audio data
         buffer_size           - buffer size (bytes)
-
-    To access the unpacked audio data ((n_channels, n_samples) numpy array) and its
-    timestamps, call `unpack_audio()` method and then use the getter methods.
-    Timestamps that can be used for synchronization are available via
-    `get_audio_timestamps()` method.
 
     Parameters
     ----------
@@ -272,47 +320,65 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     ) -> None:
         super().__init__(fname)
         self._regression_segment_length = regression_segment_length
-        # Open the file to parse metadata and read the audio bytes into memory.
-        with open(fname, "rb") as data_file:
-            # Check the magic string
-            if not data_file.read(len(magic_str)) == magic_str.encode("utf8"):
-                raise ValueError(
-                    f"File {fname} does not start with the expected "
-                    f"magic string: {magic_str}."
-                )
-            self.ver = struct.unpack("I", data_file.read(4))[0]
-            if self.ver != 0:
-                # Can only read version 0 for the time being
-                raise UnknownVersionError()
 
-            self._sampling_rate, self._n_channels = struct.unpack(
-                "II", data_file.read(8)
+        self._data_file = open(self._fname, "rb")
+        # Check the magic string
+        if not self._data_file.read(len(magic_str)) == magic_str.encode("utf8"):
+            raise ValueError(
+                f"File {fname} does not start with the expected "
+                f"magic string: {magic_str}."
             )
-            self.format_string = data_file.read(2).decode("ascii")
 
-            # Get the size of the data part in the file.
-            begin_data = data_file.tell()
-            data_file.seek(0, 2)
-            end_data = data_file.tell()
-            data_file.seek(begin_data, 0)
+        # Read properties from the file header.
+        self.ver = struct.unpack("I", self._data_file.read(4))[0]
+        if self.ver != 0:
+            # Can only read version 0.
+            raise UnknownVersionError()
 
-            ts, self.buffer_size, total_sz = read_attrib(data_file, self.ver)
-            data_file.seek(begin_data, 0)
+        self._sampling_rate, self._n_channels = struct.unpack(
+            "II", self._data_file.read(8)
+        )
+        self.format_string = self._data_file.read(2).decode("ascii")
 
-            assert (end_data - begin_data) % total_sz == 0
+        # Now file position is at the beginning of audio data blocks.
 
-            self._n_chunks = (end_data - begin_data) // total_sz
-            self.raw_audio = bytearray(self._n_chunks * self.buffer_size)
-            self.buffer_timestamps_ms = np.zeros(self._n_chunks)
+        begin_data = self._data_file.tell()
+        self._data_file.seek(0, 2)  # seek to end of file
+        end_data = self._data_file.tell()
+        # Seek back to the beginning of audio data blocks.
+        self._data_file.seek(begin_data, 0)
 
-            for i in range(self._n_chunks):
-                ts, sz, cur_total_sz = read_attrib(data_file, self.ver)
-                assert cur_total_sz == total_sz
-                self.raw_audio[self.buffer_size * i : self.buffer_size * (i + 1)] = (
-                    data_file.read(sz)
+        # Get the size of the payload in one audio data block and the total size
+        # of the block (header + payload). Advances file position!
+        _, first_payload_size, first_block_size = read_block_attributes(
+            self._data_file, self.ver
+        )
+        self.buffer_size_bytes = first_payload_size  # size of audio data in one block
+        self._data_file.seek(begin_data, 0)  # return to beginning
+
+        if not (end_data - begin_data) % first_block_size == 0:
+            raise ValueError(
+                "Audio data size is not a multiple of block size. "
+                "The audio file may be corrupted."
+            )
+
+        # Read the positions and timestamps of all audio blocks.
+        self._n_blocks = (end_data - begin_data) // first_block_size
+        self.buffer_timestamps_ms = np.zeros(self._n_blocks, dtype=np.int64)
+        self._audio_block_positions: list[int] = []
+        for i in range(self._n_blocks):
+            timestamp, payload_size, block_size = read_block_attributes(
+                self._data_file, self.ver
+            )
+            if block_size != first_block_size:
+                raise ValueError(
+                    "Inconsistent block size while reading audio data. First block size"
+                    f" was {first_block_size} bytes, but block {i} size is"
+                    f" {block_size} bytes."
                 )
-                self.buffer_timestamps_ms[i] = ts
-        # close the file
+            self._audio_block_positions.append(self._data_file.tell())
+            self._data_file.seek(payload_size, 1)  # skip actual audio data (payload)
+            self.buffer_timestamps_ms[i] = timestamp
 
         # Make sure that the timestamps are increasing
         if not np.all(np.diff(self.buffer_timestamps_ms) >= 0):
@@ -328,27 +394,32 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         # Calculate how many samples there is in one raw audio data buffer,
         # taking into account that the buffer contains interleaved samples
         # from all channels.
-        self._n_samples_per_buffer = self.buffer_size // (
-            self._n_channels * self._n_bytes_per_sample
+        one_sample_from_all_channels_size = self._n_channels * self._n_bytes_per_sample
+
+        if not self.buffer_size_bytes % one_sample_from_all_channels_size == 0:
+            raise ValueError(
+                "Audio buffer size is not a multiple of one sample from all channels."
+            )
+        self._n_samples_per_channel_per_buffer = (
+            self.buffer_size_bytes // one_sample_from_all_channels_size
         )
         # Calculate total number of samples per channel in the whole audio.
-        self._n_samples = self._n_samples_per_buffer * self._n_chunks
+        self._n_samples = self._n_samples_per_channel_per_buffer * self._n_blocks
 
-        # Initialize the attributes for unpacked audio data as None.
-        # If user tries to access these without explicitly calling unpack_audio(),
-        # it will be done automatically by the getter methods.
+        self._compute_audio_timestamps()  # will set self._audio_timestamps_ms
 
-        # (n_channels, n_samples)
-        self._unpacked_audio: npt.NDArray[np.float32] | None = None
-        self._unpacked_mean_audio: npt.NDArray[np.float32] | None = None  # (n_samples,)
-        self._audio_timestamps_ms: npt.NDArray[np.float64] | None = None  # (n_samples,)
+    def close(self) -> None:
+        """Close the audio file."""
+        if hasattr(self, "_data_file") and not self._data_file.closed:
+            try:
+                self._data_file.close()
+            except Exception as e:
+                logger.warning(f"Error closing audio file {self._fname}: {e}")
 
     def get_audio_all_channels(
         self, sample_range: tuple[int, int] | None = None
     ) -> npt.NDArray[np.float32]:
         """Get audio data for all channels in the specified sample range.
-
-        Triggers unpacking of audio data if it has not been done yet.
 
         Parameters
         ----------
@@ -361,25 +432,14 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         npt.NDArray[np.float32]
             A 2D array of shape (n_channels, n_samples) containing the audio data.
         """
-        self._ensure_unpacked_audio()
-        assert self._unpacked_audio is not None, (
-            "Audio data should be unpacked after calling _ensure_unpacked_audio."
+        return self._get_audio_samples(
+            sample_range if sample_range is not None else (0, self.n_samples)
         )
-        if sample_range is None:
-            return self._unpacked_audio[:, :]
-
-        start_sample, end_sample = sample_range
-        if start_sample < 0 or end_sample > self._unpacked_audio.shape[1]:
-            raise ValueError("Sample range is out of bounds.")
-
-        return self._unpacked_audio[:, start_sample:end_sample]
 
     def get_audio_mean(
         self, sample_range: tuple[int, int] | None = None
     ) -> npt.NDArray[np.float32]:
         """Get mean audio data across channels in the specified sample range.
-
-        Triggers unpacking of audio data if it has not been done yet.
 
         Parameters
         ----------
@@ -392,94 +452,20 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         npt.NDArray[np.float32]
             A 1D array containing the mean audio data for the specified sample range.
         """
-        self._ensure_unpacked_audio()
-        assert self._unpacked_mean_audio is not None, (
-            "Mean audio data should be available after calling _ensure_unpacked_audio."
+        audio_all_channels = self._get_audio_samples(
+            sample_range if sample_range is not None else (0, self.n_samples)
         )
-        if sample_range is None:
-            return self._unpacked_mean_audio[:]
-
-        start_sample, end_sample = sample_range
-        if start_sample < 0 or end_sample > self._unpacked_mean_audio.shape[0]:
-            raise ValueError("Sample range is out of bounds.")
-
-        return self._unpacked_mean_audio[start_sample:end_sample]
+        return audio_all_channels.mean(axis=0)
 
     def get_audio_timestamps_ms(self) -> npt.NDArray[np.float64]:
         """Get timestamps for all audio samples in milliseconds.
-
-        Triggers unpacking of audio data if it has not been done yet.
 
         Returns
         -------
         npt.NDArray[np.float64]
             A 1D array containing timestamps for all audio samples in milliseconds.
         """
-        self._ensure_unpacked_audio()
-        assert self._audio_timestamps_ms is not None, (
-            "Audio timestamps should be available after calling _ensure_unpacked_audio."
-        )
         return self._audio_timestamps_ms
-
-    def unpack_audio(self, normalize: bool = True) -> None:
-        """Unpack the raw byte audio data and compute timestamps for all samples.
-
-        Produces a float32 numpy array of shape (n_channels, n_samples) that can
-        be accessed via getter methods `get_audio_all_channels()` and
-        `get_audio_mean()`.
-
-        This method is automatically called by the getter methods that require unpacked
-        audio data. However, as this method is heavy on memory and time consumption,
-        it is recommended to once call it manually before using the getters to avoid
-        surprisingly heavy get operations.
-
-        NOTE: this method consumes a lot of memory!
-
-        Parameters
-        ----------
-        normalize : bool, optional
-            If True (default), the audio samples are normalized to the range [-1, 1].
-            Normalization is done by dividing all samples by the maximum absolute value
-            of the samples across all channels (global normalization).
-        """
-        logger.info("Unpacking audio data, this may take a while...")
-        self._compute_audio_timestamps()
-
-        total_samples = self.n_samples * self.n_channels
-
-        # Create a format string for unpacking all samples at once.
-        endian_char = self.format_string[0]
-        sample_type = self.format_string[1]
-        bulk_format_string = f"{endian_char}{total_samples}{sample_type}"
-
-        # Unpack all the samples.
-        total_bytes = total_samples * self._n_bytes_per_sample
-        unpacked_samples = struct.unpack(
-            bulk_format_string, self.raw_audio[:total_bytes]
-        )
-        # Convert the tuple to numpy array.
-        audio = np.array(unpacked_samples, dtype=np.float32)
-
-        # Reshape (n_channels, n_samples) layout.
-        # The data is interleaved, so reshape to (n_samples, n_channels) first
-        # and then transpose.
-        audio = audio.reshape(self.n_samples, self.n_channels).T
-
-        if normalize:
-            global_max = np.abs(audio).max()
-            if global_max > 0:
-                audio /= global_max
-            else:
-                logger.warning("All audio samples are zero, normalization skipped.")
-
-        self._unpacked_audio = audio
-        self._unpacked_mean_audio = audio.mean(axis=0)
-
-    def print_stats(self) -> None:
-        """Print basic statistics about the audio file."""
-        # Overrides the base class method to ensure audio is unpacked first.
-        self._ensure_unpacked_audio()
-        return super().print_stats()
 
     @property
     def sampling_rate(self) -> int:
@@ -500,6 +486,95 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     @property
     def duration(self) -> float:
         return self.n_samples / self.sampling_rate
+
+    def _get_audio_samples(
+        self, sample_range: tuple[int, int]
+    ) -> npt.NDArray[np.float32]:
+        """Get audio samples in the specified range (start inclusive, end exclusive).
+
+        Determines the correct audio blocks to read from file and unpacks the samples.
+        """
+        start_sample, end_sample = sample_range
+        if start_sample < 0 or end_sample > self.n_samples:
+            raise ValueError("Sample range is out of bounds.")
+        if start_sample >= end_sample:
+            raise ValueError("Invalid sample range: start must be less than end.")
+
+        n_samples_to_read = end_sample - start_sample
+        duration_to_read = n_samples_to_read / self.sampling_rate
+
+        # Determine which blocks to read.
+        first_block_idx = start_sample // self._n_samples_per_channel_per_buffer
+        last_block_idx = (end_sample - 1) // self._n_samples_per_channel_per_buffer
+        n_blocks_to_read = last_block_idx - first_block_idx + 1
+
+        logger.debug(
+            f"Reading {duration_to_read:.2f} seconds ({n_samples_to_read} samples) of "
+            f"audio data from blocks {first_block_idx} to {last_block_idx}."
+        )
+
+        # Allocate space for raw audio data from the blocks.
+        block_data = bytearray(n_blocks_to_read * self.buffer_size_bytes)
+
+        # Read the necessary blocks and concatenate their payloads (ignore headers).
+        for block_idx in range(first_block_idx, last_block_idx + 1):
+            # Determine where to copy the block data in the allocated bytearray.
+            relative_block_idx = block_idx - first_block_idx
+            block_start = relative_block_idx * self.buffer_size_bytes
+            block_end = block_start + self.buffer_size_bytes
+
+            # Read the block and copy its data.
+            block_data[block_start:block_end] = self._read_block(block_idx)
+
+        # Unpack the audio data from the read blocks to (n_channels, n_samples) array.
+        unpacked_audio = self._unpack_audio(block_data, n_blocks_to_read)
+
+        # Because we might have read more samples than requested (we read whole blocks),
+        # determine the correct slice to return.
+        first_block_start_sample = (
+            first_block_idx * self._n_samples_per_channel_per_buffer
+        )
+        copy_start = start_sample - first_block_start_sample
+        copy_end = copy_start + n_samples_to_read
+
+        return unpacked_audio[:, copy_start:copy_end]
+
+    def _read_block(self, block_idx: int) -> bytes:
+        """Read the raw audio data from the specified block in the file."""
+        # Seek to the beginning of the block.
+        block_pos = self._audio_block_positions[block_idx]
+        self._data_file.seek(block_pos, 0)
+
+        # Read the block data.
+        return self._data_file.read(self.buffer_size_bytes)
+
+    def _unpack_audio(
+        self, audio_bytes: bytearray, n_blocks: int
+    ) -> npt.NDArray[np.float32]:
+        """Unpack given raw audio bytes from adjacent blocks.
+
+        Parameters
+        ----------
+        audio_bytes : bytearray
+            Raw audio bytes from adjacent blocks to unpack.
+        n_blocks : int
+            Number of blocks contained in audio_bytes.
+
+        Returns
+        -------
+        npt.NDArray[np.float32]
+            A 2D array of shape (n_channels, n_samples) containing the unpacked audio
+            data.
+        """
+        n_samples_per_channel = self._n_samples_per_channel_per_buffer * n_blocks
+        dtype = self._get_numpy_dtype()
+
+        audio = np.frombuffer(audio_bytes, dtype=dtype).astype(np.float32)
+
+        # Reshape (n_channels, n_samples) layout.
+        # The data is interleaved, so reshape to (n_samples, n_channels) first
+        # and then transpose.
+        return audio.reshape(n_samples_per_channel, self.n_channels).T
 
     def _get_bit_depth(self, format_string: str) -> int:
         """Get the bit depth from the format string."""
@@ -528,15 +603,46 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
             )
         return bit_depth_map[bit_depth_char]
 
-    def _ensure_unpacked_audio(self) -> None:
-        """Ensure that the audio data is unpacked."""
-        if self._unpacked_audio is None:
-            logger.warning(
-                "Unpacked audio data is not available. "
-                "Calling unpack_audio() to unpack the audio data. "
-                "Consider calling unpack_audio() manually before using the getters."
+    def _get_numpy_dtype(self) -> np.dtype:
+        """Construct numpy dtype from the format string."""
+        # Determine the data type for numpy based on the format string.
+        dtype_map = {
+            "b": np.int8,
+            "B": np.uint8,
+            "h": np.int16,
+            "H": np.uint16,
+            "i": np.int32,
+            "I": np.uint32,
+            "l": np.int32,
+            "L": np.uint32,
+            "q": np.int64,
+            "Q": np.uint64,
+            "f": np.float32,
+            "d": np.float64,
+        }
+        sample_type = self.format_string[1]
+        if sample_type not in dtype_map:
+            raise ValueError(
+                f"Unsupported sample type character: {sample_type} in format "
+                f"string {self.format_string}"
             )
-            self.unpack_audio()
+        numpy_dtype = np.dtype(dtype_map[sample_type])
+        # Handle endianness.
+        endian_char = self.format_string[0]
+        if endian_char == "<":
+            numpy_dtype = numpy_dtype.newbyteorder("<")
+        elif endian_char == ">":
+            numpy_dtype = numpy_dtype.newbyteorder(">")
+        elif endian_char in ("=", "@"):
+            # Native endianness
+            numpy_dtype = numpy_dtype.newbyteorder("=")
+        else:
+            raise ValueError(
+                f"Unsupported endianness character: {endian_char} in format "
+                f"string {self.format_string}"
+            )
+
+        return numpy_dtype
 
     def _compute_audio_timestamps(self) -> None:
         """Transform sparse buffer timestamps into dense sample timestamps.
@@ -547,12 +653,15 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         # Create an array that contains the indices of the last sample in each buffer.
         # These indices correspond to the timestamps we have.
         buffer_end_indices = np.arange(
-            self._n_samples_per_buffer - 1, self.n_samples, self._n_samples_per_buffer
+            self._n_samples_per_channel_per_buffer - 1,
+            self.n_samples,
+            self._n_samples_per_channel_per_buffer,
         )
 
         # Prepare arrays to hold the regression errors and the computed timestamps.
-        regression_errors = -np.ones(self._n_chunks)
-        audio_timestamps_ms = -np.ones(self.n_samples)
+        regression_errors = -np.ones(self._n_blocks, dtype=np.float64)
+        # Double precision is important here!
+        audio_timestamps_ms = -np.ones(self.n_samples, dtype=np.float64)
 
         # Split the data into segments for piecewise linear regression.
         split_indices = list(

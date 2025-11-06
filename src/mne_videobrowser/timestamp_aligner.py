@@ -79,9 +79,9 @@ class TimestampAligner:
         timestamps. If "left", the index corresponding to the left target timestamp
         is selected. If "right", the index corresponding to the right target timestamp
         is selected. By default "left".
-    timestamps_a_name : str, optional
+    name_a : str, optional
         Name for the timestamps in `timestamps_a`, used in logging messages.
-    timestamps_b_name : str, optional
+    name_b : str, optional
         Name for the timestamps in `timestamps_b`, used in logging messages.
     """
 
@@ -141,12 +141,12 @@ class TimestampAligner:
     def _validate_input_times(self) -> None:
         if not np.all(np.diff(self._timestamps_a_ms) >= 0):
             raise ValueError(
-                f"{self._name_a} timestamps are not strictly increasing. "
+                f"{self._name_a} timestamps are not non-decreasing (sorted). "
                 "This is required for the mapping to work correctly."
             )
         if not np.all(np.diff(self._timestamps_b_ms) >= 0):
             raise ValueError(
-                f"{self._name_b} timestamps are not strictly increasing. "
+                f"{self._name_b} timestamps are not non-decreasing (sorted). "
                 "This is required for the mapping to work correctly."
             )
 

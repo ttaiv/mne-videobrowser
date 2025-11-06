@@ -39,7 +39,6 @@ def main() -> None:
 
     # Load the audio.
     audio = AudioFileHelsinkiVideoMEG(AUDIO_PATH)
-    audio.unpack_audio()
     audio.print_stats()
 
     # Extract timestamps for each audio sample.
