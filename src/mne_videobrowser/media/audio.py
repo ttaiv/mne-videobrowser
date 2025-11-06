@@ -441,8 +441,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
     ) -> npt.NDArray[np.float32]:
         """Get mean audio data across channels in the specified sample range.
 
-        Triggers unpacking of audio data if it has not been done yet.
-
         Parameters
         ----------
         sample_range : tuple[int, int] | None
@@ -461,8 +459,6 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
     def get_audio_timestamps_ms(self) -> npt.NDArray[np.float64]:
         """Get timestamps for all audio samples in milliseconds.
-
-        Triggers unpacking of audio data if it has not been done yet.
 
         Returns
         -------
