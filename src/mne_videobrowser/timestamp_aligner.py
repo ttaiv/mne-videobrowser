@@ -263,7 +263,7 @@ class TimestampAligner:
 
     def _find_indices_with_closest_values(
         self, source_times: NDArray[np.floating], target_times: NDArray[np.floating]
-    ) -> NDArray[np.intp]:
+    ) -> NDArray[np.int32]:
         """Find indices of the closest target times for each source time.
 
         Parameters
@@ -275,7 +275,7 @@ class TimestampAligner:
 
         Returns
         -------
-        NDArray[np.intp]
+        NDArray[np.int32]
             1-D array consisting of the indices of the closest target times
             for each source time.
         """
@@ -305,7 +305,13 @@ class TimestampAligner:
             )
         closest_indices = np.where(comparison, insert_indices - 1, insert_indices)
 
-        return closest_indices
+        if np.any(closest_indices > np.iinfo(np.int32).max):
+            raise OverflowError(
+                "Found index larger than maximum int32 value. This should not happen "
+                "unless the target timestamps array is extremely large."
+            )
+
+        return closest_indices.astype(np.int32)
 
     def _log_mapping_errors(self, errors_ms: NDArray[np.floating]) -> None:
         """Log statistics about the distances between source and target timestamps."""
@@ -381,7 +387,7 @@ class TimestampAligner:
         )
         self._log_mapping_errors(errors_ms)
 
-        mapping[valid_mask] = closest_target_indices.astype(np.int32, casting="safe")
+        mapping[valid_mask] = closest_target_indices
 
         # Make sure that all the source indices were mapped.
         assert np.all(mapping != self._NOT_MAPPED), (
