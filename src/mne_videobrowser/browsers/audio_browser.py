@@ -181,6 +181,13 @@ class AudioView(QWidget):
         self._plot_widget.setLabel("bottom", "Time", "s")
         self._plot_widget.setLabel("left", "Amplitude")
         self._plot_widget.setMouseEnabled(x=True, y=False)
+        # Restrict x-axis range to audio duration
+        self._plot_widget.setLimits(
+            xMin=0,
+            xMax=self._audio.duration,
+            minXRange=0.1,
+            maxXRange=self._audio.duration,
+        )
         self._layout.addWidget(self._plot_widget)
 
     def _setup_toolbar(self) -> None:
