@@ -91,7 +91,7 @@ class TimestampAligner:
     # Values for marking failed mappings in the internal mapping arrays
     _FAILURE_INDEX_TOO_SMALL = -1
     _FAILURE_INDEX_TOO_LARGE = -2
-    _NOT_MAPPED = -3
+    _NOT_MAPPED = -3  # this is used during construction only
 
     def __init__(
         self,
@@ -117,12 +117,12 @@ class TimestampAligner:
         # Precompute mapping from timestamps a to b and vice versa.
 
         logger.info(f"Building mapping from {name_a} to {name_b}.")
-        self._mapping_ab = self._build_mapping(
+        self._mapping_ab: NDArray[np.int32] = self._build_mapping(
             source_timestamps_ms=self._timestamps_a_ms,
             target_timestamps_ms=self._timestamps_b_ms,
         )
         logger.info(f"Building mapping from {name_b} to {name_a}.")
-        self._mapping_ba = self._build_mapping(
+        self._mapping_ba: NDArray[np.int32] = self._build_mapping(
             source_timestamps_ms=self._timestamps_b_ms,
             target_timestamps_ms=self._timestamps_a_ms,
         )
@@ -410,6 +410,8 @@ class TimestampAligner:
             return MappingFailure(failure_reason=MapFailureReason.INDEX_TOO_SMALL)
         elif encoded_result == self._FAILURE_INDEX_TOO_LARGE:
             return MappingFailure(failure_reason=MapFailureReason.INDEX_TOO_LARGE)
+        elif encoded_result == self._NOT_MAPPED:
+            raise ValueError("Encountered unmapped index (internal error).")
         else:
             raise ValueError(f"Unknown encoded result: {encoded_result}")
 
