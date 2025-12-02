@@ -281,14 +281,14 @@ class TimestampAligner:
         """
         # Find the indices where each source time would fit in the target array.
         insert_indices = np.searchsorted(target_times, source_times)
-        # Ensure that the indices are within bounds
+        # Ensure that the indices are within bounds.
         insert_indices = np.clip(insert_indices, 1, len(target_times) - 1)
 
-        # Get the target times around the insert position
+        # Get the target times around the insert position.
         left_target = target_times[insert_indices - 1]
         right_target = target_times[insert_indices]
 
-        # Calculate distances to the left and right target times
+        # Calculate distances to the left and right target times.
         left_distances = np.abs(source_times - left_target)
         right_distances = np.abs(source_times - right_target)
 
@@ -381,7 +381,7 @@ class TimestampAligner:
         )
         self._log_mapping_errors(errors_ms)
 
-        mapping[valid_mask] = closest_target_indices
+        mapping[valid_mask] = closest_target_indices.astype(np.int32)
 
         # Make sure that all the source indices were mapped.
         assert np.all(mapping != self._NOT_MAPPED), (
