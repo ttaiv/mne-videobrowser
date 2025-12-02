@@ -381,7 +381,7 @@ class TimestampAligner:
         )
         self._log_mapping_errors(errors_ms)
 
-        mapping[valid_mask] = closest_target_indices.astype(np.int32)
+        mapping[valid_mask] = closest_target_indices.astype(np.int32, casting="safe")
 
         # Make sure that all the source indices were mapped.
         assert np.all(mapping != self._NOT_MAPPED), (
