@@ -1,6 +1,6 @@
 [project]
 name = "mne-videobrowser"
-version = "0.1.1"
+version = "0.1.2"
 description = "Browse video and audio in sync with MEG/EEG data"
 readme = "README.md"
 authors = [
