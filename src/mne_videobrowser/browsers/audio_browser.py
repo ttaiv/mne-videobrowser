@@ -4,6 +4,7 @@ import logging
 import os.path
 
 import numpy as np
+import numpy.typing as npt
 import pyqtgraph as pg
 from qtpy.QtCore import Qt, QTimer, Signal, Slot  # type: ignore
 from qtpy.QtWidgets import (
@@ -41,9 +42,6 @@ class AudioView(QWidget):
     default_view_len : float, optional
         The duration to show in the audio view with default zoom level,
         by default 10.0 seconds.
-    plotting_duration : float, optional
-        The duration of audio to plot at once, by default 30 seconds. Re-plotting
-        is done when the current sample goes out of the currently plotted range.
     time_selector_padding : float, optional
         Padding (in seconds) to apply when making sure that the user does not drag the
         selector too close to the edges of the view, by default 0.1 seconds.
@@ -60,7 +58,6 @@ class AudioView(QWidget):
         audio: AudioFile,
         plotting_window_size: int | None = None,
         default_view_len: float = 10.0,
-        plotting_duration: float = 60.0,
         time_selector_padding: float = 0.1,
         parent: QWidget | None = None,
     ) -> None:
@@ -77,7 +74,6 @@ class AudioView(QWidget):
 
         self._time_selector_padding = time_selector_padding
         self._default_view_len = default_view_len
-        self._n_samples_to_plot = int(plotting_duration * audio.sampling_rate)
         # The index of the currently highlighted/selected sample
         self._current_sample = 0
         self._visible_duration_seconds = default_view_len  # this is changed by zooming
@@ -88,20 +84,17 @@ class AudioView(QWidget):
 
         # Add the plot that visualizes the audio data
         self._setup_plot_widget()
+        self._set_clamped_time_range(0, self._visible_duration_seconds)
 
         # Add a vertical line that indicates the current sample and is movable
         self._time_selector = TimeSelector(parent=self)
         self._time_selector.sigSelectedTimeChanged.connect(self._on_time_selector_moved)
-        self._time_selector.add_to_plot(self._plot_widget)
 
         # Add controls and information about the audio.
         self._setup_toolbar()
 
         # Initial visualization
-        self._plotted_range = (0, min(self._n_samples_to_plot, self._audio.n_samples))
-        self._plot_selected_channel(self._plotted_range)
-
-        self._set_clamped_time_range(0, self._visible_duration_seconds)
+        self._add_initial_plot()  # assumes time selector has been created
         self.display_at_sample(0, signal=False)
 
     @property
@@ -151,8 +144,7 @@ class AudioView(QWidget):
         # Current time gets updated based on the sample index.
 
         self._time_selector.set_selected_time_no_signal(self.current_time)
-        self._move_view_to_current_time()  # important to call before _replot_if_needed!
-        self._replot_if_needed()
+        self._move_view_to_current_time()
         self._time_label.set_current_time(self.current_time)
 
         if signal:
@@ -185,10 +177,66 @@ class AudioView(QWidget):
         """Set up the plot widget for audio visualization."""
         self._plot_widget = pg.PlotWidget()
         self._plot_widget.setBackground("w")
+        self._plot_widget.setAntialiasing(False)  # might increase performance
         self._plot_widget.setLabel("bottom", "Time", "s")
         self._plot_widget.setLabel("left", "Amplitude")
         self._plot_widget.setMouseEnabled(x=True, y=False)
+        # Restrict x-axis range to audio duration
+        self._plot_widget.setLimits(
+            xMin=0,
+            xMax=self._audio.duration,
+            minXRange=0.1,
+            maxXRange=self._audio.duration,
+        )
         self._layout.addWidget(self._plot_widget)
+
+    def _add_initial_plot(self) -> None:
+        """Plot the selected channel for the first time, setting up the plot.
+
+        NOTE: This is meant to be called only once during initialization,
+        later updates should be done with _plot_selected_channel.
+        """
+        # Ensure that curves have not been created.
+        assert not hasattr(self, "_envelope_plot"), (
+            "Audio plot already exists, this method should only be called once."
+        )
+        times, audio_envelope = self._get_interleaved_audio_envelope()
+        logger.debug("Reading done, plotting initial audio waveform.")
+
+        self._envelope_plot = self._plot_widget.plot(
+            times, audio_envelope, pen=pg.mkPen("b", width=1), skipFiniteCheck=True
+        )
+        # Use downsampling to speed up rendering when zoomed out.
+        self._envelope_plot.setDownsampling(auto=True, method="peak")
+        # Enable clipping to improve performance when zoomed in.
+        self._envelope_plot.setClipToView(True)
+
+        logger.debug("Finished plotting initial audio waveform.")
+
+        # Add time selector last so that it is on top of the audio plot.
+        self._time_selector.add_to_plot(self._plot_widget)
+
+    def _get_interleaved_audio_envelope(
+        self,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float32]]:
+        """Get audio envelope with interleaved min and max values for plotting.
+
+        NOTE: Reads the entire audio data for the selected channel. This takes some time
+        and memory for large audio files.
+        """
+        times, audio_min, audio_max = self._audio.get_min_max_envelope(
+            window_size=self._plotting_window_size,
+            channel_idx=self._channel_selection,
+            sample_range=None,  # get all samples
+        )
+        n_points = len(times)
+        interleaved_times = times.repeat(2)
+
+        interleaved_audio = np.empty(n_points * 2, dtype=audio_min.dtype)
+        interleaved_audio[0::2] = audio_min
+        interleaved_audio[1::2] = audio_max
+
+        return interleaved_times, interleaved_audio
 
     def _setup_toolbar(self) -> None:
         """Set up toolbar that contains controls and information about the audio."""
@@ -333,71 +381,24 @@ class AudioView(QWidget):
             )
             self._plot_widget.setXRange(new_min, new_max, padding=0)  # type: ignore
 
-    def _replot_if_needed(self) -> None:
-        """Replot if the visible window is outside the currently plotted range."""
-        # Get current view range in time
-        window_min_time, window_max_time = self._plot_widget.viewRange()[0]
-        # Convert view times to sample indices
-        window_min_sample = int(window_min_time * self._audio.sampling_rate)
-        window_max_sample = int(window_max_time * self._audio.sampling_rate)
-
-        if (
-            window_min_sample < self._plotted_range[0]
-            or window_max_sample > self._plotted_range[1]
-        ):
-            # Current window contains samples outside the plotted range, re-plot needed.
-            logger.debug(
-                f"Current view range is [{window_min_sample}, {window_max_sample}] "
-                f"but plotted range is {self._plotted_range}. Re-plotting audio."
-            )
-            # Center the new plotted range around the current sample.
-            new_start_sample = max(
-                0,
-                self._current_sample - self._n_samples_to_plot // 2,
-            )
-            new_end_sample = min(
-                self._audio.n_samples,
-                self._current_sample + self._n_samples_to_plot // 2,
-            )
-            self._plot_selected_channel((new_start_sample, new_end_sample))
-
-    def _plot_selected_channel(self, sample_range: tuple[int, int]) -> None:
-        """Plot the selected channel in the given sample range."""
-        # Clear previous plots
-        self._plot_widget.clear()
-        # Re-add the time selector after clearing
-        self._time_selector.add_to_plot(self._plot_widget)
-
-        # Plot min and max of the audio in windows.
-        times, audio_min, audio_max = self._audio.get_min_max_envelope(
-            window_size=self._plotting_window_size,
-            channel_idx=self._channel_selection,
-            sample_range=sample_range,
+    def _plot_selected_channel(self) -> None:
+        """Re-plot the audio waveform for the currently selected channel."""
+        logger.debug(
+            f"Getting audio waveform for current channel: {self._channel_selection}"
         )
-        # Plot a filled region between min and max
-        upper_curve = self._plot_widget.plot(
-            times, audio_max, pen=pg.mkPen("b", width=1)
+        times, audio_envelope = self._get_interleaved_audio_envelope()
+        logger.debug("Reading done, updating audio waveform plot.")
+        self._envelope_plot.setData(
+            times, audio_envelope, pen=pg.mkPen("b", width=1), skipFiniteCheck=True
         )
-        lower_curve = self._plot_widget.plot(
-            times, audio_min, pen=pg.mkPen("b", width=1)
-        )
-        fill = pg.FillBetweenItem(
-            upper_curve,
-            lower_curve,
-            brush=(100, 100, 255, 80),
-        )
-        self._plot_widget.addItem(fill)
-
-        # Update the plotted range
-        self._plotted_range = sample_range
+        logger.debug("Audio waveform plot updated.")
 
     @Slot()
     def _on_time_selector_moved(self) -> None:
         """Handle when the selector line is moved by the user.
 
-        Updates the current sample and triggers re-plot if needed based on the new
-        position of the selector and emits a signal for the position change.
-        Does not change the visible window.
+        Updates the current sample based on the new position of the selector
+        and emits a signal for the position change. Does not change the visible window.
         """
         # Clamp the new time both to the current view range to make it impossible to
         # move the selector outside the visible range and to audio duration.
@@ -412,7 +413,6 @@ class AudioView(QWidget):
         # Update currently selected sample and time label.
         self._current_sample = new_sample  # Updates self.current_time automatically
         self._time_label.set_current_time(self.current_time)
-        self._replot_if_needed()
 
         # Emit signal for position change
         self.sigSampleIndexChanged.emit(new_sample)
@@ -426,7 +426,7 @@ class AudioView(QWidget):
         else:
             self._channel_selection = index - 1  # Adjust for "All" being index 0
 
-        self._plot_selected_channel(sample_range=self._plotted_range)
+        self._plot_selected_channel()
         self.sigChannelSelectionChanged.emit(self._channel_selection)
 
     @Slot()
