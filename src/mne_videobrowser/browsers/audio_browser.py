@@ -230,7 +230,6 @@ class AudioView(QWidget):
             sample_range=None,  # get all samples
         )
         n_points = len(times)
-        interleaved_times = np.empty(n_points * 2, dtype=times.dtype)
         interleaved_times = times.repeat(2)
 
         interleaved_audio = np.empty(n_points * 2, dtype=audio_min.dtype)
