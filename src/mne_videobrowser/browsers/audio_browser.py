@@ -208,6 +208,8 @@ class AudioView(QWidget):
         )
         # Use downsampling to speed up rendering when zoomed out.
         self._envelope_plot.setDownsampling(auto=True, method="peak")
+        # Enable clipping to improve performance when zoomed in.
+        self._envelope_plot.setClipToView(True)
 
         logger.debug("Finished plotting initial audio waveform.")
 
