@@ -177,7 +177,7 @@ class AudioView(QWidget):
         """Set up the plot widget for audio visualization."""
         self._plot_widget = pg.PlotWidget()
         self._plot_widget.setBackground("w")
-        self._plot_widget.setAntialiasing(False)  # might increse performance
+        self._plot_widget.setAntialiasing(False)  # might increase performance
         self._plot_widget.setLabel("bottom", "Time", "s")
         self._plot_widget.setLabel("left", "Amplitude")
         self._plot_widget.setMouseEnabled(x=True, y=False)
@@ -198,7 +198,7 @@ class AudioView(QWidget):
         """
         # Ensure that curves have not been created.
         assert not hasattr(self, "_envelope_plot"), (
-            "Audio plot already exist, this method should only be called once."
+            "Audio plot already exists, this method should only be called once."
         )
         times, audio_envelope = self._get_interleaved_audio_envelope()
         logger.debug("Reading done, plotting initial audio waveform.")
@@ -387,7 +387,6 @@ class AudioView(QWidget):
         logger.debug(
             f"Getting audio waveform for current channel: {self._channel_selection}"
         )
-        # Get the sample range currently visible in the plot.
         times, audio_envelope = self._get_interleaved_audio_envelope()
         logger.debug("Reading done, updating audio waveform plot.")
         self._envelope_plot.setData(
