@@ -463,16 +463,6 @@ class AudioView(QWidget):
             self.current_time - half_window, self.current_time + half_window
         )
 
-    def _get_current_sample_range(self) -> tuple[int, int]:
-        """Get the sample range currently visible in the plot."""
-        view_min, view_max = self._plot_widget.viewRange()[0]
-        plot_min = max(0.0, view_min)
-        plot_max = min(self._audio.duration, view_max)
-        start_sample = int(plot_min * self._audio.sampling_rate)
-        end_sample = int(plot_max * self._audio.sampling_rate)
-
-        return start_sample, end_sample
-
 
 class AudioBrowser(SyncableBrowserWidget):
     """Qt widget for browsing audio with playback controls.
