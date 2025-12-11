@@ -1,7 +1,7 @@
 [project]
 name = "mne-videobrowser"
 version = "0.1.2"
-description = "Browse video and audio in sync with MEG/EEG data"
+description = "Python package for browsing video and audio time-synchronized to MEG/EEG data"
 readme = "README.md"
 authors = [
     { name = "Teemu Taivainen", email = "ttaiv@outlook.com" }

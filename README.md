@@ -1,4 +1,4 @@
-# Video browser extension for MNE-Python Qt data browser
+# Video and audio browser extension for MNE-Python's Qt data browser
 
 This is an open-source Python package for browsing video and audio time-synchronized to MEG/EEG data.
 It serves as an add-on for [mne-qt-browser](https://github.com/mne-tools/mne-qt-browser), which is part
