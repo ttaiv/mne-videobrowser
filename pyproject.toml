@@ -1,6 +1,6 @@
 [project]
 name = "mne-videobrowser"
-version = "0.1.2"
+version = "0.1.3"
 description = "Python package for browsing video and audio time-synchronized to MEG/EEG data"
 readme = "README.md"
 authors = [
