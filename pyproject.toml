@@ -33,6 +33,7 @@ dev = [
   "pytest",
   "PyQt5-stubs"  # this helps IDE with type hints
 ]
+doc = ["sphinx"]
 
 [project.urls]
 Repository = "https://github.com/ttaiv/mne-videobrowser"
