@@ -48,46 +48,6 @@ Audio
 
    AudioFileHelsinkiVideoMEG
 
-Detailed API
-------------
-
-Main Functions
-~~~~~~~~~~~~~~
-
-.. autofunction:: browse_raw_with_video
-
-.. autofunction:: browse_raw_with_audio
-
-.. autofunction:: browse_raw_with_video_and_audio
-
-Timestamp Alignment
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: TimestampAligner
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autofunction:: compute_raw_timestamps
-
-Media Classes
-~~~~~~~~~~~~~
-
-.. autoclass:: VideoFileCV2
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: VideoFileHelsinkiVideoMEG
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: AudioFileHelsinkiVideoMEG
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Browser Components
 ------------------
 
@@ -102,28 +62,8 @@ Browser Components
    SyncableBrowser
    RawBrowserManager
 
-.. autoclass:: AudioBrowser
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: VideoBrowser
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: SyncableBrowser
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: RawBrowserManager
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Media Module
-------------
+Helsinki VideoMEG Utilities
+----------------------------
 
 .. currentmodule:: mne_videobrowser.media
 
@@ -131,30 +71,5 @@ Media Module
    :toctree: generated/
    :nosignatures:
 
-   video
-   audio
-   helsinki_videomeg_file_utils
-
-Video Module
-~~~~~~~~~~~~
-
-.. automodule:: mne_videobrowser.media.video
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Audio Module
-~~~~~~~~~~~~
-
-.. automodule:: mne_videobrowser.media.audio
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Helsinki VideoMEG Utilities
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: mne_videobrowser.media.helsinki_videomeg_file_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   helsinki_videomeg_file_utils.read_block_attributes
+   helsinki_videomeg_file_utils.UnknownVersionError
