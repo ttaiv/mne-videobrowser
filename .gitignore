@@ -9,4 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# IDE settings
 .vscode
+
+# Documentation build
+docs/build/
+docs/source/generated/
