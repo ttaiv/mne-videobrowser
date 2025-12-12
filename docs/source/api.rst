@@ -62,14 +62,3 @@ Browser Components
    SyncableBrowser
    RawBrowserManager
 
-Helsinki VideoMEG Utilities
-----------------------------
-
-.. currentmodule:: mne_videobrowser.media
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   helsinki_videomeg_file_utils.read_block_attributes
-   helsinki_videomeg_file_utils.UnknownVersionError

@@ -13,7 +13,7 @@ import imageio.v3 as iio
 import numpy as np
 import numpy.typing as npt
 
-from .helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
+from ._helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
 
 logger = logging.getLogger(__name__)
 
