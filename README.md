@@ -69,6 +69,7 @@ stable version), but instead of `pip install mne-videobrowser`:
    ```
 
    Editable mode ensures that changes in source code are reflected to the installed package.
+   Development dependencies include `pytest` for running tests and `sphinx` for building documentation.
 
 ### Running tests
 
@@ -81,3 +82,16 @@ pytest
 ```
 
 You can also selectively run tests in a specific file/class/method. See [pytest documentation](https://docs.pytest.org/en/stable/how-to/usage.html) for details.
+
+### Building documentation
+
+Documentation source files are located in `docs/source/` and built documentation in `docs/build/`.
+Documentation mostly automatically generated from the source code docstrings using `sphinx`.
+To build the documentation:
+
+```bash
+cd docs
+make html  # on Windows use 'make.bat html'
+```
+
+Then view the built html documentation by opening file `docs/build/html/index.html` in a web browser.
