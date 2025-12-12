@@ -11,6 +11,14 @@ by supporting video and audio files recorded with their software.
 ![VideoMEG browser screenshot](https://raw.githubusercontent.com/ttaiv/mne-videobrowser/main/browser_screenshot.png)
 Screenshot of the browser extension showing a black video frame and a test audio file synchronized with MNE-Python's sample MEG data.
 
+## Features
+
+* Time-synchronized video browsing and playback with MEG/EEG data
+* Time-synchronized audio browsing and playback with MEG/EEG data
+* Support for multiple video and MEG files simultaneously (only one audio file with multiple channels at a time)
+* Support for [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project) format files
+* Standard video format support (MP4, AVI, etc.) via OpenCV (for audio only Helsinki VideoMEG format is currently supported)
+
 ## Installation
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
