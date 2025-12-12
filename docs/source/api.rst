@@ -51,6 +51,13 @@ Audio
 Browser Components
 ------------------
 
+These do not have to be interacted with if using any of the main functions above.
+However, they are useful if:
+
+1. You want to browse just video or audio without MEG/EEG data (requires manual management of Qt application loop, see examples).
+2. You want to extend this package with new browser types.
+3. You want to build something custom using the browsers.
+
 .. currentmodule:: mne_videobrowser.browsers
 
 .. autosummary::
@@ -60,5 +67,6 @@ Browser Components
    AudioBrowser
    VideoBrowser
    SyncableBrowser
+   SyncableBrowserObject
+   SyncableBrowserWidget
    RawBrowserManager
-
