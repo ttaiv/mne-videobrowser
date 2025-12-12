@@ -31,9 +31,8 @@ dependencies = ["opencv-python-headless>=4.12.0.88", "sounddevice>=0.5.2"]
 [project.optional-dependencies]
 dev = [
   "pytest",
-  "PyQt5-stubs"  # this helps IDE with type hints
-]
-doc = [
+  "PyQt5-stubs",  # this helps IDE with type hints
+  # Documentation dependencies
   "sphinx",
   "pydata-sphinx-theme",
 ]
