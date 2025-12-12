@@ -469,6 +469,9 @@ class AudioBrowser(SyncableBrowserWidget):
 
     This browser allows interactive visualization of audio data from AudioFile objects.
 
+    NOTE: This browser currently only supports a single audio file. Methods that receive
+    `media_idx` parameter ignore it and signals emit zero as the media index.
+
     Parameters
     ----------
     audio : AudioFile
@@ -478,9 +481,6 @@ class AudioBrowser(SyncableBrowserWidget):
         By default 50 ms, which corresponds to 20 updates per second.
     parent : QWidget | None, optional
         The parent widget, by default None.
-
-    NOTE: This browser currently only supports a single audio file. Methods that receive
-    `media_idx` parameter ignore it and signals emit `media_idx` as zero.
     """
 
     def __init__(
