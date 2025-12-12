@@ -19,12 +19,11 @@ files recorded with their software.
 Features
 --------
 
-* Time-synchronized video playback with MEG/EEG data
-* Time-synchronized audio playback with MEG/EEG data
-* Support for multiple video and audio files simultaneously
-* Integration with MNE-Python's data browser
-* Support for Helsinki VideoMEG format files
-* Standard video format support (MP4, AVI, etc.) via OpenCV
+* Time-synchronized video browsing and playback with MEG/EEG data
+* Time-synchronized audio browsing and playback with MEG/EEG data
+* Support for multiple video and MEG files simultaneously (only one audio file with multiple channels at a time)
+* Support for `Helsinki VideoMEG project <https://github.com/Helsinki-VideoMEG-Project>`_ format files
+* Standard video format support (MP4, AVI, etc.) via OpenCV (for audio only Helsinki VideoMEG format is currently supported)
 
 Installation
 ------------
@@ -59,21 +58,6 @@ qt backend to work correctly, MNE-Python should be installed using
 
       sudo apt install libportaudio2
 
-Quick Start
------------
-
-Here's a simple example of how to browse MEG data with synchronized video:
-
-.. code-block:: python
-
-   import mne
-   from mne_videobrowser import browse_raw_with_video
-
-   # Load your MEG/EEG data
-   raw = mne.io.read_raw_fif('your_data.fif', preload=True)
-
-   # Browse with video
-   browse_raw_with_video(raw, 'your_video.mp4')
 
 Documentation Contents
 ----------------------
@@ -84,11 +68,4 @@ Documentation Contents
 
    api
    examples
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
