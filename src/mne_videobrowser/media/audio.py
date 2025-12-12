@@ -296,9 +296,10 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
 
     In addition to the properties of AudioFile interface, the following
     attributes are available:
-        buffer_timestamps_ms  - buffers' timestamps (unix time in milliseconds)
-        format_string         - format string for the audio data
-        buffer_size           - buffer size (bytes)
+
+    - buffer_timestamps_ms: buffers' timestamps (unix time in milliseconds)
+    - format_string: format string for the audio data
+    - buffer_size: buffer size (bytes)
 
     Parameters
     ----------

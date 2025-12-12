@@ -489,7 +489,6 @@ class AudioBrowser(SyncableBrowserWidget):
         playback_update_interval_ms: int = 50,
         parent: QWidget | None = None,
     ) -> None:
-        """Initialize the audio browser."""
         super().__init__(parent=parent)
         self._audio = audio
         # Get sample rate that is suitable for playing audio on the hardware we are
