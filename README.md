@@ -1,5 +1,7 @@
 # Video and audio browser extension for MNE-Python's Qt data browser
 
+[![Documentation Status](https://readthedocs.org/projects/mne-videobrowser/badge/?version=latest)](https://mne-videobrowser.readthedocs.io/en/latest/?badge=latest)
+
 This is an open-source Python package for browsing video and audio time-synchronized to MEG/EEG data.
 It serves as an add-on for [mne-qt-browser](https://github.com/mne-tools/mne-qt-browser), which is part
 of [MNE-Python](https://mne.tools/stable/), an open-source Python package for exploring, visualizing,
@@ -18,6 +20,12 @@ Screenshot of the browser extension showing a black video frame and a test audio
 * Support for multiple video and MEG files simultaneously (only one audio file with multiple channels at a time)
 * Support for [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project) format files
 * Standard video format support (MP4, AVI, etc.) via OpenCV (for audio only Helsinki VideoMEG format is currently supported)
+
+## Documentation
+
+[Documentation](https://mne-videobrowser.readthedocs.io/) contains installation instructions (same as below), public API reference,
+and some of the usage examples available in the [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/main/examples).
+A bit of the code structure and and implementation details are also documented.
 
 ## Installation
 
