@@ -143,13 +143,20 @@ class SyncableBrowser:
 
 
 class SyncableBrowserObject(SyncableBrowser, QObject):
-    """A helper class to combine SyncableBrowser and QObject."""
+    """A helper class to combine SyncableBrowser and QObject.
 
-    # Signal for change in displayed media position
-    # (video frame, audio sample, raw data sample, etc.)
-    sigPositionChanged = Signal(int, int)  # media index, sample index
-    # Signal for change in playback state (playing/paused) of media
-    sigPlaybackStateChanged = Signal(int, bool)  # media index, is playing
+    Signals
+    -------
+    sigPositionChanged : Signal(int, int)
+        Emitted when a displayed media position changes.
+        Parameters: (media index, position index).
+    sigPlaybackStateChanged : Signal(int, bool)
+        Emitted when the playback state changes.
+        Parameters: (media index, is playing).
+    """
+
+    sigPositionChanged = Signal(int, int)
+    sigPlaybackStateChanged = Signal(int, bool)
 
     def __init__(self, parent: QObject | None = None) -> None:
         SyncableBrowser.__init__(self)
@@ -157,13 +164,20 @@ class SyncableBrowserObject(SyncableBrowser, QObject):
 
 
 class SyncableBrowserWidget(SyncableBrowser, QWidget):
-    """A helper class to combine SyncableBrowser and QWidget."""
+    """A helper class to combine SyncableBrowser and QWidget.
 
-    # Signal for change in displayed media position
-    # (video frame, audio sample, raw data sample, etc.)
-    sigPositionChanged = Signal(int, int)  # media index, sample index
-    # Signal for change in playback state (playing/paused) of media
-    sigPlaybackStateChanged = Signal(int, bool)  # media index, is playing
+    Signals
+    -------
+    sigPositionChanged : Signal(int, int)
+        Emitted when a displayed media position changes.
+        Parameters: (media index, position index).
+    sigPlaybackStateChanged : Signal(int, bool)
+        Emitted when the playback state changes.
+        Parameters: (media index, is playing).
+    """
+
+    sigPositionChanged = Signal(int, int)
+    sigPlaybackStateChanged = Signal(int, bool)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         SyncableBrowser.__init__(self)

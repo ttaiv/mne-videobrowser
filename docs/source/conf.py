@@ -69,3 +69,24 @@ html_theme_options = {
     "show_nav_level": 2,
     "show_toc_level": 2,
 }
+
+
+def setup(app):
+    """Configure Sphinx extension hooks.
+
+    This function is called by Sphinx during the build process. We use it here
+    to register a custom handler for the 'autodoc-skip-member' event. This
+    handler prevents the automatic documentation of Qt Signal objects, which
+    have docstrings that cause Sphinx warnings (due to unclosed emphasis).
+    """
+    try:
+        from qtpy.QtCore import Signal  # pyright: ignore[reportPrivateImportUsage]
+    except ImportError:
+        return
+
+    def skip_signal(app, what, name, obj, skip, options):
+        if isinstance(obj, Signal):
+            return True
+        return skip
+
+    app.connect("autodoc-skip-member", skip_signal)
