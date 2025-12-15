@@ -4,6 +4,8 @@ build:
   os: ubuntu-22.04
   apt_packages:
     - libportaudio2
+  tools:
+    python: "mambaforge-22.9"
 
 conda:
   environment: docs/environment.yml
