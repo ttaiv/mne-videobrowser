@@ -34,7 +34,7 @@ Synchronized Examples
 Video with MEG data
 ~~~~~~~~~~~~~~~~~~~
 
-Browser MEG data with synchronized video:
+Browse MEG data with synchronized video:
 
 .. literalinclude:: ../../examples/video_meg_sync.py
    :language: python
