@@ -25,7 +25,7 @@ Screenshot of the browser extension showing a black video frame and a test audio
 
 [Documentation](https://mne-videobrowser.readthedocs.io/) contains installation instructions (same as below), public API reference,
 and some of the usage examples available in the [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/main/examples).
-A bit of the code structure and and implementation details are also documented.
+A bit of the code structure and implementation details are also documented.
 
 ## Installation
 
