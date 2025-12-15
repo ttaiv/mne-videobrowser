@@ -45,7 +45,7 @@ qt backend to work correctly, MNE-Python should be installed using
 
       conda activate mne-videobrowser
 
-3. Install this package with rest of the dependencies:
+3. Install this package with the rest of the dependencies:
 
    .. code-block:: bash
 
