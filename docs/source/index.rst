@@ -67,5 +67,6 @@ Documentation Contents
    :caption: Contents:
 
    api
+   class_diagram
    examples
 

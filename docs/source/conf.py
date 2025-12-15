@@ -66,7 +66,7 @@ html_theme_options = {
     },
     "github_url": "https://github.com/ttaiv/mne-videobrowser",
     "navigation_depth": 4,
-    "show_nav_level": 2,
+    "show_nav_level": 0,
     "show_toc_level": 2,
 }
 
