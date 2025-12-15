@@ -292,7 +292,7 @@ class AudioFile(ABC):
 
 
 class AudioFileHelsinkiVideoMEG(AudioFile):
-    """Read an audio file in the Helsinki videoMEG project format.
+    """Read an audio file in the Helsinki VideoMEG project format.
 
     In addition to the properties of AudioFile interface, the following
     attributes are available:

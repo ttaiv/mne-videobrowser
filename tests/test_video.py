@@ -7,7 +7,7 @@ import pytest
 
 from mne_videobrowser.media.video import VideoFileHelsinkiVideoMEG
 
-# Tests with a specific video file in Helsinki videoMEG format.
+# Tests with a specific video file in Helsinki VideoMEG format.
 VIDEO_PATH = (
     "/u/69/taivait1/unix/video_meg_testing/Subject_2_Luna/Video_MEG/"
     "animal_meg_subject_2_240614.video.dat"
@@ -20,7 +20,7 @@ VIDEO_FPS = 30.0  # Frames per second for the test video
     not os.path.exists(VIDEO_PATH), reason="Test .video.dat file not available."
 )
 class TestVideoFileHelsinkiVideoMEG:
-    """Tests for Helsinki videoMEG project video file handling."""
+    """Tests for Helsinki VideoMEG project video file handling."""
 
     def test_open_close(self):
         """Test opening and closing the video file."""
@@ -55,7 +55,7 @@ class TestVideoFileHelsinkiVideoMEG:
         """Test video file properties after initialization."""
         with VideoFileHelsinkiVideoMEG(VIDEO_PATH, MAGIC_STR) as video:
             assert video.fname == VIDEO_PATH
-            # Using approx as Helsinki videoMEG video files do not have exact FPS
+            # Using approx as Helsinki VideoMEG video files do not have exact FPS
             # and it is approximated using time between frames.
             assert video.fps == pytest.approx(VIDEO_FPS, rel=1e-3)  # within 0.1%
             assert video.frame_count > 0
