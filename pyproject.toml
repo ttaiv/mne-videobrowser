@@ -39,6 +39,7 @@ dev = [
 
 [project.urls]
 Repository = "https://github.com/ttaiv/mne-videobrowser"
+Documentation = "https://mne-videobrowser.readthedocs.io/"
 
 [build-system]
 requires = ["hatchling"]
