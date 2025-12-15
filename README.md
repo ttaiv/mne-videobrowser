@@ -86,7 +86,7 @@ You can also selectively run tests in a specific file/class/method. See [pytest 
 ### Building documentation
 
 Documentation source files are located in `docs/source/` and built documentation in `docs/build/`.
-Documentation mostly automatically generated from the source code docstrings using `sphinx`.
+Documentation is mostly automatically generated from the source code docstrings using `sphinx`.
 To build the documentation:
 
 ```bash
