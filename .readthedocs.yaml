@@ -7,6 +7,5 @@ build:
   apt_packages:
     - libportaudio2
 
-python:
-  install:
-    - requirements: docs/requirements.txt
+conda:
+  environment: docs/environment.yml

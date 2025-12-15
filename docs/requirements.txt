@@ -1,4 +1,0 @@
--e .[dev]
-mne
-mne-qt-browser
-PyQt5

@@ -1,0 +1,10 @@
+name: mne-videobrowser-docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - mne  # install mne with conda
+  - pip
+  - pip:
+    - -e .[dev] # and rest of the dependencies with pip
