@@ -3,7 +3,7 @@
 Loads sample MEG data and two video files, creates artificial MEG timestamps that align
 well with the video timestamps and displays the videos in sync with the raw data.
 
-Running this requires two video files recorded with Helsinki videoMEG project software.
+Running this requires two video files recorded with Helsinki VideoMEG project software.
 File paths also need adjustment.
 """
 

@@ -1,6 +1,6 @@
-"""Inspect MEG data and video recorded with Helsinki videoMEG project software.
+"""Inspect MEG data and video recorded with Helsinki VideoMEG project software.
 
-Running this requires MEG data and video files recorded with the Helsinki videoMEG
+Running this requires MEG data and video files recorded with the Helsinki VideoMEG
 project software. You also need to adjust file paths.
 """
 

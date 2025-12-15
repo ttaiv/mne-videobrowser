@@ -13,7 +13,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy import signal
 
-from .helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
+from ._helsinki_videomeg_file_utils import UnknownVersionError, read_block_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -292,13 +292,14 @@ class AudioFile(ABC):
 
 
 class AudioFileHelsinkiVideoMEG(AudioFile):
-    """Read an audio file in the Helsinki videoMEG project format.
+    """Read an audio file in the Helsinki VideoMEG project format.
 
     In addition to the properties of AudioFile interface, the following
     attributes are available:
-        buffer_timestamps_ms  - buffers' timestamps (unix time in milliseconds)
-        format_string         - format string for the audio data
-        buffer_size           - buffer size (bytes)
+
+    - buffer_timestamps_ms: buffers' timestamps (unix time in milliseconds)
+    - format_string: format string for the audio data
+    - buffer_size: buffer size (bytes)
 
     Parameters
     ----------

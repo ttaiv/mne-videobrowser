@@ -1,6 +1,6 @@
 """Demonstrates browsing raw data along with two synchronized videos and audio.
 
-Running this requires video and audio files recorded with Helsinki videoMEG project
+Running this requires video and audio files recorded with Helsinki VideoMEG project
 software. File paths also need adjustment.
 """
 

@@ -11,6 +11,14 @@ by supporting video and audio files recorded with their software.
 ![VideoMEG browser screenshot](https://raw.githubusercontent.com/ttaiv/mne-videobrowser/main/browser_screenshot.png)
 Screenshot of the browser extension showing a black video frame and a test audio file synchronized with MNE-Python's sample MEG data.
 
+## Features
+
+* Time-synchronized video browsing and playback with MEG/EEG data
+* Time-synchronized audio browsing and playback with MEG/EEG data
+* Support for multiple video and MEG files simultaneously (only one audio file with multiple channels at a time)
+* Support for [Helsinki VideoMEG project](https://github.com/Helsinki-VideoMEG-Project) format files
+* Standard video format support (MP4, AVI, etc.) via OpenCV (for audio only Helsinki VideoMEG format is currently supported)
+
 ## Installation
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
@@ -61,6 +69,7 @@ stable version), but instead of `pip install mne-videobrowser`:
    ```
 
    Editable mode ensures that changes in source code are reflected to the installed package.
+   Development dependencies include `pytest` for running tests and `sphinx` for building documentation.
 
 ### Running tests
 
@@ -73,3 +82,16 @@ pytest
 ```
 
 You can also selectively run tests in a specific file/class/method. See [pytest documentation](https://docs.pytest.org/en/stable/how-to/usage.html) for details.
+
+### Building documentation
+
+Documentation source files are located in `docs/source/` and built documentation in `docs/build/`.
+Documentation is mostly automatically generated from the source code docstrings using `sphinx`.
+To build the documentation:
+
+```bash
+cd docs
+make html  # on Windows use 'make.bat html'
+```
+
+Then view the built html documentation by opening file `docs/build/html/index.html` in a web browser.

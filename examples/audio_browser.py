@@ -1,6 +1,6 @@
 """Demo script for the AudioBrowser.
 
-Running this requires an audio file in Helsinki videoMEG project format.
+Running this requires an audio file in Helsinki VideoMEG project format.
 Adjust the file path as needed.
 """
 

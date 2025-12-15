@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def compute_raw_timestamps(
     raw: mne.io.Raw, timing_channel: str
 ) -> npt.NDArray[np.float64]:
-    """Get the timestamps from raw data having Helsinki videoMEG timing channel.
+    """Get the timestamps from raw data having Helsinki VideoMEG timing channel.
 
     Parameters
     ----------

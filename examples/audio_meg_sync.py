@@ -1,6 +1,6 @@
 """Run audio browser in sync with MNE raw data browser.
 
-Running this requires audio file recorded with the Helsinki videoMEG project software.
+Running this requires audio file recorded with the Helsinki VideoMEG project software.
 You also need to adjust file paths. Used MEG data is from MNE sample dataset.
 """
 
