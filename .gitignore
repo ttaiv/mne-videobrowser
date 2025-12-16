@@ -7,7 +7,8 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venv/
+venv/
 
 # IDE settings
 .vscode
