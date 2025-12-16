@@ -328,7 +328,18 @@ class VideoFileHelsinkiVideoMEG(VideoFile):
         self._file.seek(offset)
         frame_bytes = self._file.read(sz)
 
-        return iio.imread(frame_bytes)
+        frame_arr = np.frombuffer(frame_bytes, dtype=np.uint8)
+        frame = cv2.imdecode(frame_arr, cv2.IMREAD_COLOR)
+        if frame is None:
+            logger.error(
+                f"Could not decode frame at index {frame_idx}, returning None."
+            )
+            return None
+
+        # Convert the frame from BGR to RGB format
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        return frame.astype(np.uint8, copy=False)
 
     @property
     def frame_count(self) -> int:
