@@ -54,7 +54,7 @@ Using conda (recommended)
       pip install mne-videobrowser
 
 4. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
-   dependecy of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
+   dependency of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
 
    .. code-block:: bash
 

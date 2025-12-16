@@ -54,7 +54,7 @@ and `sounddevice` for audio playback. Recommended way to install MNE-Python is u
    ```
 
 4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
-dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
+dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
    ```bash
    sudo apt install libportaudio2
@@ -71,7 +71,7 @@ dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
    ```
 
 3. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
-dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
+dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
    ```bash
    sudo apt install libportaudio2
