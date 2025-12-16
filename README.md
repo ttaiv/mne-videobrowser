@@ -30,8 +30,10 @@ A bit of the code structure and implementation details are also documented.
 ## Installation
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
-and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-Python should be installed using
+and `sounddevice` for audio playback. Recommended way to install MNE-Python is using
 [conda](https://github.com/conda/conda).
+
+### Using conda (recommended)
 
 1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
 
@@ -52,6 +54,23 @@ and `sounddevice` for audio playback. For the qt backend to work correctly, MNE-
    ```
 
 4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
+dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
+
+   ```bash
+   sudo apt install libportaudio2
+   ```
+
+### Using only pip
+
+1. Activate your desired Python environment ([documentation for virtual environments](https://docs.python.org/3/tutorial/venv.html)).
+
+2. Install this package, all dependencies will be installed automatically:
+
+   ```bash
+   pip install mne-videobrowser
+   ```
+
+3. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
 dependecy of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
    ```bash
