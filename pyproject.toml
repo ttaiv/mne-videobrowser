@@ -26,11 +26,12 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-  "mne>=1.10.1",
-  "mne-qt-browser>=0.7.2",
-  "PyQt5>=5.15.11",
+  "mne>=1.10",
+  "mne-qt-browser>=0.7",
+  "PyQt5>=5.15",
   "opencv-python-headless>=4.8",
-  "sounddevice>=0.5.2"]
+  "sounddevice>=0.5"
+]
 [project.optional-dependencies]
 dev = [
   "pytest",
