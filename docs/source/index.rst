@@ -71,6 +71,13 @@ Using only pip
 
       pip install mne-videobrowser
 
+3. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
+   dependency of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
+
+   .. code-block:: bash
+
+      sudo apt install libportaudio2
+
 
 Documentation Contents
 ----------------------
