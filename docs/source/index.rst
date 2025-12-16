@@ -28,12 +28,14 @@ Features
 Installation
 ------------
 
-In addition to MNE-Python, this project requires package ``OpenCV`` for standard 
-video file (such as .mp4) reading and ``sounddevice`` for audio playback. For the 
-qt backend to work correctly, MNE-Python should be installed using 
+In addition to MNE-Python, this project requires package ``OpenCV`` for standard video file (such as .mp4) reading
+and ``sounddevice`` for audio playback. Recommended way to install MNE-Python is using
 `conda <https://github.com/conda/conda>`_.
 
-1. Create a new conda environment (named ``mne-videobrowser``) with MNE-Python installed:
+Using conda (recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Create a new conda environment (named ``mne-videobrowser``) with MNE-Python installed.
 
    .. code-block:: bash
 
@@ -45,18 +47,29 @@ qt backend to work correctly, MNE-Python should be installed using
 
       conda activate mne-videobrowser
 
-3. Install this package with the rest of the dependencies:
+3. Install this package with rest of the dependencies:
 
    .. code-block:: bash
 
       pip install mne-videobrowser
 
-4. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, 
-   which is dependency of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
+4. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
+   dependecy of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
 
    .. code-block:: bash
 
       sudo apt install libportaudio2
+
+Using only pip
+^^^^^^^^^^^^^^
+
+1. Activate your desired Python environment (`documentation for virtual environments <https://docs.python.org/3/tutorial/venv.html>`_).
+
+2. Install this package, all dependencies will be installed automatically:
+
+   .. code-block:: bash
+
+      pip install mne-videobrowser
 
 
 Documentation Contents
