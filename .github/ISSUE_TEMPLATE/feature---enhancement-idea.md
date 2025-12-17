@@ -1,7 +1,7 @@
 ---
 name: Feature / enhancement idea
 about: Suggest an idea or improvement
-title: 'ENH:'
+title: ''
 labels: enhancement
 assignees: ''
 
