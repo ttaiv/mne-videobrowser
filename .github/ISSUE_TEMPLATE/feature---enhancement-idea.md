@@ -13,7 +13,7 @@ A clear and concise description of what the problem is. Ex. I'm always frustrate
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
 
-**Propose implementation (optional)**
+**Propose implementation**
 For example: Add method `x` for class `y` and then call that in function `z`.
 
 **Describe alternatives you've considered**
