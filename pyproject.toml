@@ -36,6 +36,8 @@ dependencies = [
 dev = [
   "pytest",
   "PyQt5-stubs",  # this helps IDE with type hints
+  "ruff",
+  "pyright",
   # Documentation dependencies
   "sphinx",
   "pydata-sphinx-theme",
