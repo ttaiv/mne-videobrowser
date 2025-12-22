@@ -5,7 +5,6 @@ Adjust the file path as needed.
 """
 
 import logging
-import sys
 
 from qtpy.QtWidgets import QApplication
 
@@ -33,7 +32,7 @@ def main() -> None:
         window = AudioBrowser(audio)
         window.resize(1000, 600)
         window.show()
-        sys.exit(app.exec_())
+        app.exec_()
 
 
 if __name__ == "__main__":

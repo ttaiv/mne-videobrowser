@@ -6,7 +6,6 @@ Adjust the file path and video type as needed.
 """
 
 import logging
-import sys
 
 from qtpy.QtWidgets import QApplication
 
@@ -38,7 +37,7 @@ def main() -> None:
         window = VideoBrowser([video])
         window.resize(1000, 800)
         window.show()
-        sys.exit(app.exec_())
+        app.exec_()
 
 
 if __name__ == "__main__":
