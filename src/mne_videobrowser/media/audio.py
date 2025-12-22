@@ -29,9 +29,10 @@ class AudioFile(ABC):
         """Ensure the audio file is released when the object is deleted."""
         self.close()
 
+    @abstractmethod
     def __enter__(self) -> "AudioFile":
         """Enter the runtime context with opened audio file."""
-        return self
+        pass
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         """Exit the runtime context and release the audio file."""
@@ -408,6 +409,10 @@ class AudioFileHelsinkiVideoMEG(AudioFile):
         self._n_samples = self._n_samples_per_channel_per_buffer * self._n_blocks
 
         self._compute_audio_timestamps()  # will set self._audio_timestamps_ms
+
+    def __enter__(self) -> "AudioFileHelsinkiVideoMEG":
+        """Enter the runtime context with opened audio file."""
+        return self
 
     def close(self) -> None:
         """Close the audio file."""
