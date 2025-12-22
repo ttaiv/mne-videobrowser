@@ -129,12 +129,8 @@ class VideoFileCV2(VideoFile):
 
     def close(self) -> None:
         """Release the video capture object."""
-        if self._cap.isOpened():
+        if hasattr(self, "_cap") and self._cap.isOpened():
             self._cap.release()
-        else:
-            logger.debug(
-                "Trying to release an already released video capture, ignoring."
-            )
 
     def get_frame_at(self, frame_idx: int):
         """Read a specific frame from the video file.
@@ -294,15 +290,11 @@ class VideoFileHelsinkiVideoMEG(VideoFile):
 
     def close(self) -> None:
         """Close the video file."""
-        if not hasattr(self, "_file"):
-            # The file opening probably failed during initialization of the object.
-            logger.debug(
-                "Trying to close a video file that was never opened, ignoring."
-            )
-        elif self._file.closed:
-            logger.debug("Trying to close an already closed video file, ignoring.")
-        else:
-            self._file.close()
+        if hasattr(self, "_file") and not self._file.closed:
+            try:
+                self._file.close()
+            except Exception as e:
+                logger.warning(f"Error closing video file {self._file_name}: {e}")
 
     def get_frame_at(self, frame_idx: int) -> npt.NDArray[np.uint8] | None:
         """Read a specific frame from the video file.
