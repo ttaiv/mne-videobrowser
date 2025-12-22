@@ -26,7 +26,7 @@ def main() -> None:
     BASE_PATH = "/u/69/taivait1/unix/video_meg_testing/2025-07-11_MEG2MEG_test/"
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
@@ -38,46 +38,47 @@ def main() -> None:
     raw.crop(tmax=60)
 
     # Load videos.
-    video1 = VideoFileHelsinkiVideoMEG(
-        op.join(BASE_PATH, "2025-07-11--18-18-41_video_01.vid")
-    )
-    video2 = VideoFileHelsinkiVideoMEG(
-        op.join(BASE_PATH, "2025-07-11--18-18-41_video_02.vid")
-    )
+    with (
+        VideoFileHelsinkiVideoMEG(
+            op.join(BASE_PATH, "2025-07-11--18-18-41_video_01.vid")
+        ) as video1,
+        VideoFileHelsinkiVideoMEG(
+            op.join(BASE_PATH, "2025-07-11--18-18-41_video_02.vid")
+        ) as video2,
+    ):
+        for video in [video1, video2]:
+            video.print_stats()
 
-    for video in [video1, video2]:
-        video.print_stats()
+        # Create artificial timestamps for raw data.
+        start_ts = video1.timestamps_ms[0]
+        end_ts = video1.timestamps_ms[-1]
+        raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
 
-    # Create artificial timestamps for raw data.
-    start_ts = video1.timestamps_ms[0]
-    end_ts = video1.timestamps_ms[-1]
-    raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
+        # Create a separate aligner for both videos
+        aligner1 = TimestampAligner(
+            timestamps_a=raw_timestamps_ms,
+            timestamps_b=video1.timestamps_ms,
+            timestamp_unit="milliseconds",
+            name_a="raw",
+            name_b="video1",
+        )
+        aligner2 = TimestampAligner(
+            timestamps_a=raw_timestamps_ms,
+            timestamps_b=video2.timestamps_ms,
+            timestamp_unit="milliseconds",
+            name_a="raw",
+            name_b="video2",
+        )
 
-    # Create a separate aligner for both videos
-    aligner1 = TimestampAligner(
-        timestamps_a=raw_timestamps_ms,
-        timestamps_b=video1.timestamps_ms,
-        timestamp_unit="milliseconds",
-        name_a="raw",
-        name_b="video1",
-    )
-    aligner2 = TimestampAligner(
-        timestamps_a=raw_timestamps_ms,
-        timestamps_b=video2.timestamps_ms,
-        timestamp_unit="milliseconds",
-        name_a="raw",
-        name_b="video2",
-    )
-
-    # Start the browser.
-    raw_browser = raw.plot(block=False, show=False)
-    browse_raw_with_video(
-        raw_browser,
-        raw,
-        [video1, video2],
-        [aligner1, aligner2],
-        video_splitter_orientation="vertical",
-    )
+        # Start the browser.
+        raw_browser = raw.plot(block=False, show=False)
+        browse_raw_with_video(
+            raw_browser,
+            raw,
+            [video1, video2],
+            [aligner1, aligner2],
+            video_splitter_orientation="vertical",
+        )
 
 
 if __name__ == "__main__":
