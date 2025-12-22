@@ -28,17 +28,17 @@ def main() -> None:
 
     # Choose the type of video file by uncommenting/commenting.
 
-    video = VideoFileHelsinkiVideoMEG(video_path, magic_str="ELEKTA_VIDEO_FILE")
-    # video = VideoFileCV2(video_path)  # suitable for .mp4, .avi, etc.
+    with VideoFileHelsinkiVideoMEG(video_path, magic_str="ELEKTA_VIDEO_FILE") as video:
+        # Or use VideoFileCV2(video_path)  # for .mp4, .avi, etc.
 
-    # Print video stats
-    video.print_stats()
+        # Print video stats
+        video.print_stats()
 
-    app = QApplication([])
-    window = VideoBrowser([video])
-    window.resize(1000, 800)
-    window.show()
-    sys.exit(app.exec_())
+        app = QApplication([])
+        window = VideoBrowser([video])
+        window.resize(1000, 800)
+        window.show()
+        sys.exit(app.exec_())
 
 
 if __name__ == "__main__":

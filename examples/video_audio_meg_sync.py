@@ -24,7 +24,7 @@ BASE_PATH = "/u/69/taivait1/unix/video_meg_testing/2025-07-11_MEG2MEG_test/"
 def main() -> None:
     """Run the video and audio sync demo."""
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
@@ -36,47 +36,50 @@ def main() -> None:
     raw.crop(tmax=60)  # Crop to 60 seconds
 
     # Load video and audio.
-    video = VideoFileHelsinkiVideoMEG(
-        op.join(BASE_PATH, "2025-07-11--18-18-41_video_01.vid")
-    )
-    audio = AudioFileHelsinkiVideoMEG(
-        op.join(BASE_PATH, "2025-07-11--18-18-41_audio_00.aud")
-    )
+    with (
+        VideoFileHelsinkiVideoMEG(
+            op.join(BASE_PATH, "2025-07-11--18-18-41_video_01.vid")
+        ) as video,
+        AudioFileHelsinkiVideoMEG(
+            op.join(BASE_PATH, "2025-07-11--18-18-41_audio_00.aud")
+        ) as audio,
+    ):
+        # Print stats for video and audio.
+        video.print_stats()
+        audio.print_stats()
 
-    # Print stats for video and audio.
-    video.print_stats()
-    audio.print_stats()
+        # Extract video and audio timestamps.
+        video_timestamps_ms = video.timestamps_ms
+        audio_timestamps_ms = audio.get_audio_timestamps_ms()
 
-    # Extract video and audio timestamps.
-    video_timestamps_ms = video.timestamps_ms
-    audio_timestamps_ms = audio.get_audio_timestamps_ms()
+        # Create artificial timestamps for raw data.
+        start_ts = audio_timestamps_ms[0]  # Start at the first audio timestamp
+        end_ts = (
+            start_ts + 60 * 1000
+        )  # End at 60 seconds later (convert to milliseconds)
+        raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
 
-    # Create artificial timestamps for raw data.
-    start_ts = audio_timestamps_ms[0]  # Start at the first audio timestamp
-    end_ts = start_ts + 60 * 1000  # End at 60 seconds later (convert to milliseconds)
-    raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
+        # Create a separate aligner for video and audio.
+        video_aligner = TimestampAligner(
+            timestamps_a=raw_timestamps_ms,
+            timestamps_b=video_timestamps_ms,
+            timestamp_unit="milliseconds",
+            name_a="raw",
+            name_b="video",
+        )
+        audio_aligner = TimestampAligner(
+            timestamps_a=raw_timestamps_ms,
+            timestamps_b=audio_timestamps_ms,
+            timestamp_unit="milliseconds",
+            name_a="raw",
+            name_b="audio",
+        )
 
-    # Create a separate aligner for video and audio.
-    video_aligner = TimestampAligner(
-        timestamps_a=raw_timestamps_ms,
-        timestamps_b=video_timestamps_ms,
-        timestamp_unit="milliseconds",
-        name_a="raw",
-        name_b="video",
-    )
-    audio_aligner = TimestampAligner(
-        timestamps_a=raw_timestamps_ms,
-        timestamps_b=audio_timestamps_ms,
-        timestamp_unit="milliseconds",
-        name_a="raw",
-        name_b="audio",
-    )
-
-    # Start the browser.
-    raw_browser = raw.plot(block=False, show=False)
-    browse_raw_with_video_and_audio(
-        raw_browser, raw, [video], [video_aligner], audio, audio_aligner
-    )
+        # Start the browser.
+        raw_browser = raw.plot(block=False, show=False)
+        browse_raw_with_video_and_audio(
+            raw_browser, raw, [video], [video_aligner], audio, audio_aligner
+        )
 
 
 if __name__ == "__main__":

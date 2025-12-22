@@ -26,7 +26,7 @@ AUDIO_PATH = (
 def main() -> None:
     """Run the demo."""
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
@@ -38,29 +38,30 @@ def main() -> None:
     raw.crop(tmax=60)  # Crop to the first 60 seconds.
 
     # Load the audio.
-    audio = AudioFileHelsinkiVideoMEG(AUDIO_PATH)
-    audio.print_stats()
+    with AudioFileHelsinkiVideoMEG(AUDIO_PATH) as audio:
+        audio.print_stats()
 
-    # Extract timestamps for each audio sample.
-    audio_timestamps_ms = audio.get_audio_timestamps_ms()
+        # Extract timestamps for each audio sample.
+        audio_timestamps_ms = audio.get_audio_timestamps_ms()
 
-    # Create artificial timestamps for raw data.
-    start_ts = audio_timestamps_ms[0]  # Start at the first audio timestamp
-    end_ts = start_ts + 60 * 1000  # End at 60 seconds later (convert to milliseconds)
-    raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
+        # Create artificial timestamps for raw data.
+        start_ts = audio_timestamps_ms[0]  # Start at the first audio timestamp
+        # End at 60 seconds later (convert to milliseconds)
+        end_ts = start_ts + 60 * 1000
+        raw_timestamps_ms = np.linspace(start_ts, end_ts, raw.n_times, endpoint=False)
 
-    # Align the raw data with the audio.
-    aligner = TimestampAligner(
-        timestamps_a=raw_timestamps_ms,
-        timestamps_b=audio_timestamps_ms,
-        timestamp_unit="milliseconds",
-        name_a="raw",
-        name_b="audio",
-    )
+        # Align the raw data with the audio.
+        aligner = TimestampAligner(
+            timestamps_a=raw_timestamps_ms,
+            timestamps_b=audio_timestamps_ms,
+            timestamp_unit="milliseconds",
+            name_a="raw",
+            name_b="audio",
+        )
 
-    # Start the synced raw and audio browsers.
-    raw_browser = raw.plot(block=False, show=False)
-    browse_raw_with_audio(raw_browser, raw, audio, aligner)
+        # Start the synced raw and audio browsers.
+        raw_browser = raw.plot(block=False, show=False)
+        browse_raw_with_audio(raw_browser, raw, audio, aligner)
 
 
 if __name__ == "__main__":

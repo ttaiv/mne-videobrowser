@@ -23,44 +23,43 @@ def main() -> None:
     RAW_TIMING_CHANNEL = "STI016"
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     # Create a video file object
-    video_file = VideoFileHelsinkiVideoMEG(
+    with VideoFileHelsinkiVideoMEG(
         op.join(BASE_PATH, "Video_MEG", "animal_meg_subject_2_240614.video.dat"),
         magic_str="ELEKTA_VIDEO_FILE",
-    )
-    video_file.print_stats()
+    ) as video_file:
+        video_file.print_stats()
 
-    # Create a raw data object
-    raw = mne.io.read_raw_fif(
-        op.join(BASE_PATH, "Raw", "animal_meg_subject_2_240614.fif"), preload=True
-    )
+        # Create a raw data object
+        raw = mne.io.read_raw_fif(
+            op.join(BASE_PATH, "Raw", "animal_meg_subject_2_240614.fif"), preload=True
+        )
 
-    # Extract raw and video timestamps
-    raw_timestamps_ms = compute_raw_timestamps(raw, RAW_TIMING_CHANNEL)
-    video_timestamps_ms = video_file.timestamps_ms
+        # Extract raw and video timestamps
+        raw_timestamps_ms = compute_raw_timestamps(raw, RAW_TIMING_CHANNEL)
+        video_timestamps_ms = video_file.timestamps_ms
 
-    # Set up mapping between raw data points and video frames
-    aligner = TimestampAligner(
-        raw_timestamps_ms,
-        video_timestamps_ms,
-        name_a="raw",
-        name_b="video",
-    )
+        # Set up mapping between raw data points and video frames
+        aligner = TimestampAligner(
+            raw_timestamps_ms,
+            video_timestamps_ms,
+            name_a="raw",
+            name_b="video",
+        )
 
-    # Instantiate the browsers.
-    raw_browser = raw.plot(block=False, show=False)
-    browse_raw_with_video(
-        raw_browser,
-        raw,
-        [video_file],
-        [aligner],
-    )
-    video_file.close()
+        # Instantiate the browsers.
+        raw_browser = raw.plot(block=False, show=False)
+        browse_raw_with_video(
+            raw_browser,
+            raw,
+            [video_file],
+            [aligner],
+        )
 
 
 if __name__ == "__main__":
