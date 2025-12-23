@@ -7,7 +7,7 @@ Key Components
 --------------
 
 1. **Individual Browsers (UI)**:
-   Browsers like ``RawBrowser`` (for MEG/EEG) and :class:`~mne_videobrowser.browsers.AudioBrowser` use an **evenly spaced time axis** (Nominal Time). This is derived from the sampling rate:
+   Browsers like the MNE-Qt-Browser **raw data browser** (for MEG/EEG) and :class:`~mne_videobrowser.browsers.AudioBrowser` use an **evenly spaced time axis** (Nominal Time). This is derived from the sampling rate:
 
    .. math::
 

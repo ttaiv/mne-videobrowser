@@ -16,8 +16,9 @@ Note on Time Synchronization
 The synchronization mechanism relies on mapping sample indices rather than the
 time values displayed in the individual browsers.
 
-- **Individual Browsers (UI):** Browsers like ``RawBrowser`` and ``AudioBrowser`` often
-  use an evenly spaced time axis (Nominal Time) derived from the sampling rate
+- **Individual Browsers (UI):** Browsers like the MNE-Qt-Browser raw data view
+  (from the ``mne_qt_browser`` package) and ``AudioBrowser`` often use an evenly
+  spaced time axis (Nominal Time) derived from the sampling rate
   (e.g., ``time = index / sampling_rate``).
 - **TimestampAligner (Logic):** The ``TimestampAligner`` uses the "True Time"
   (measured timestamps) to map between streams. It accounts for jitter, clock drift,
