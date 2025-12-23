@@ -87,6 +87,7 @@ Documentation Contents
    :caption: Contents:
 
    api
+   synchronization
    class_diagram
    examples
 
