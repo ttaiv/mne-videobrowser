@@ -102,7 +102,13 @@ class VideoFile(ABC):
 
 
 class VideoFileCV2(VideoFile):
-    """Container that holds a video file and provides methods to read frames from it."""
+    """Video file reader for video files supported by OpenCV.
+
+    Parameters
+    ----------
+    fname : str
+        Full path to the video file to be read.
+    """
 
     def __init__(self, fname: str) -> None:
         self._fname = fname
