@@ -10,6 +10,29 @@ There are two main synchronization scenarios:
    update the primary browser to match the new position in the secondary browser.
    After that, all other secondary browsers are updated to match the new position in
    the primary browser.
+
+Note on Time Synchronization
+----------------------------
+The synchronization mechanism relies on mapping sample indices rather than the
+time values displayed in the individual browsers.
+
+- **Individual Browsers (UI):** Browsers like ``RawBrowser`` and ``AudioBrowser`` often
+  use an evenly spaced time axis (Nominal Time) derived from the sampling rate
+  (e.g., ``time = index / sampling_rate``).
+- **TimestampAligner (Logic):** The ``TimestampAligner`` uses the "True Time"
+  (measured timestamps) to map between streams. It accounts for jitter, clock drift,
+  or gaps.
+
+When a user selects a time point in a browser:
+1. The browser converts the visual position to a **sample index**.
+2. The ``BrowserSynchronizer`` passes this index to the ``TimestampAligner``.
+3. The ``TimestampAligner`` looks up the true timestamp for that index and finds the
+   closest corresponding index in the other stream.
+4. The target browser is updated to show that specific index.
+
+This decoupling ensures that synchronization is accurate with respect to the measured
+timestamps, even if the individual browsers display a simplified, evenly spaced
+time axis.
 """
 
 import functools
