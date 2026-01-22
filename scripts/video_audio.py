@@ -1,11 +1,8 @@
-"""Synchronize a single video file with a single audio file (no raw data).
+#!/usr/bin/env python3
 
-Running this requires a .vid and .aud recorded with Helsinki VideoMEG project
-software. Update the file paths as needed.
-"""
-
-import logging
 import argparse
+from contextlib import ExitStack
+from pathlib import Path
 
 from qtpy.QtWidgets import QApplication
 
@@ -16,52 +13,68 @@ from mne_videobrowser import (
 )
 from mne_videobrowser.browser_synchronizer import BrowserSynchronizer
 from mne_videobrowser.browsers import AudioBrowser, VideoBrowser
+from mne_videobrowser.media import VideoFile
 
 
 def main() -> None:
-    """Run the video/audio synchronization demo."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)d %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+
+    parser = argparse.ArgumentParser(description="Display multiple synchronized video files with one common audio file. ")
+    parser.add_argument(
+        "folder",
+        type=str,
+        metavar="folder",
+        help="Folder containing one `.aud` file and one or more `.vid` files",
     )
-    parser = argparse.ArgumentParser()
-    parser.add_argument('fname', type=str, metavar='file', help='Path to the `.vid` and `.aud` files, without extension')
-    args = parser.parse_args()
-    video_file = args.fname + '.vid'
-    audio_file = args.fname + '.aud'
+    args = parser.parse_args()  
 
-    with (
-        VideoFileHelsinkiVideoMEG(video_file) as video,
-        AudioFileHelsinkiVideoMEG(audio_file) as audio_file,
-    ):
-        video.print_stats()
-        audio_file.print_stats()
+    folder = Path(args.folder)
+    if not folder.is_dir():
+        raise NotADirectoryError(f"Folder does not exist: {folder}")
 
-        video_timestamps_ms = video.timestamps_ms
-        audio_timestamps_ms = audio_file.get_audio_timestamps_ms()
+    video_paths = list(sorted(folder.glob("*.vid")))
+    if not video_paths:
+        raise FileNotFoundError(f"No .vid files found in folder '{folder}'.")
 
-        aligner = TimestampAligner(
-            timestamps_a=video_timestamps_ms,
-            timestamps_b=audio_timestamps_ms,
-            timestamp_unit="milliseconds",
-            name_a="video",
-            name_b="audio",
+    audio_paths = list(folder.glob("*.aud"))
+    if len(audio_paths) != 1:
+        raise FileNotFoundError(f"Expected exactly one .aud file in '{folder}', found {len(audio_paths)}.")
+    audio_path = audio_paths[0]
+
+    with ExitStack() as stack:
+        videos: list[VideoFileHelsinkiVideoMEG] = [
+            stack.enter_context(VideoFileHelsinkiVideoMEG(str(path)))
+            for path in video_paths
+        ]
+        audio = stack.enter_context(
+            AudioFileHelsinkiVideoMEG(str(audio_path))
         )
+
+        audio_timestamps_ms = audio.get_audio_timestamps_ms()
+        video_aligners = []
+        for idx, video in enumerate(videos, start=1):
+            video_aligners.append(
+                TimestampAligner(
+                    timestamps_a=audio_timestamps_ms,
+                    timestamps_b=video.timestamps_ms,
+                    timestamp_unit="milliseconds",
+                    name_a="audio",
+                    name_b=f"video-{idx}",
+                )
+            )
 
         app = QApplication([])
 
-        video_browser = VideoBrowser([video], show_sync_status=True)
-        audio_browser = AudioBrowser(audio_file)
+        video_browser = VideoBrowser(videos, show_sync_status=True)
+        audio_browser = AudioBrowser(audio)
         video_browser.resize(1000, 800)
         audio_browser.resize(1000, 400)
         video_browser.show()
         audio_browser.show()
 
         synchronizer = BrowserSynchronizer(
-            primary_browser=video_browser,
-            secondary_browsers=[audio_browser],
-            aligners=[[aligner]],
+            primary_browser=audio_browser,
+            secondary_browsers=[video_browser],
+            aligners=[video_aligners],
             max_sync_fps=10,
         )
 
