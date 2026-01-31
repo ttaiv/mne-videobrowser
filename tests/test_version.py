@@ -7,7 +7,9 @@ from pathlib import Path
 
 def test_version_defined():
     """Test that __version__ is defined in __init__.py."""
-    init_file = Path(__file__).parent.parent / "src" / "mne_videobrowser" / "__init__.py"
+    init_file = (
+        Path(__file__).parent.parent / "src" / "mne_videobrowser" / "__init__.py"
+    )
     content = init_file.read_text()
 
     # Parse the file and check that __version__ is assigned
@@ -25,7 +27,9 @@ def test_version_defined():
 
 def test_version_in_all():
     """Test that __version__ is exported in __all__."""
-    init_file = Path(__file__).parent.parent / "src" / "mne_videobrowser" / "__init__.py"
+    init_file = (
+        Path(__file__).parent.parent / "src" / "mne_videobrowser" / "__init__.py"
+    )
     content = init_file.read_text()
 
     # Parse the file and find __all__ definition
@@ -41,9 +45,9 @@ def test_version_in_all():
                             for elt in node.value.elts
                             if isinstance(elt, ast.Constant)
                         ]
-                        assert (
-                            "__version__" in all_items
-                        ), "__version__ is not in __all__"
+                        assert "__version__" in all_items, (
+                            "__version__ is not in __all__"
+                        )
                         return
 
     raise AssertionError("__all__ is not defined in __init__.py")
