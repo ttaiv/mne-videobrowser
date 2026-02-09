@@ -38,7 +38,7 @@ and `sounddevice` for audio playback. Recommended way to install MNE-Python is u
 1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
 
    ```bash
-   conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne
+   conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne-videobrowser
    ```
 
 2. Activate the environment:
@@ -47,13 +47,7 @@ and `sounddevice` for audio playback. Recommended way to install MNE-Python is u
    conda activate mne-videobrowser
    ```
 
-3. Install this package with rest of the dependencies:
-
-   ```bash
-   pip install mne-videobrowser
-   ```
-
-4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
+3. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
 dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
    ```bash
@@ -64,10 +58,10 @@ dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
 
 1. Activate your desired Python environment ([documentation for virtual environments](https://docs.python.org/3/tutorial/venv.html)).
 
-2. Install this package, all dependencies will be installed automatically:
+2. Install this package, all dependencies will be installed automatically, except for a Qt binding, so you need to specify that in the command line as well if you don't have one (we recommend PySide6):
 
    ```bash
-   pip install mne-videobrowser
+   pip install mne-videobrowser PySide6
    ```
 
 3. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
