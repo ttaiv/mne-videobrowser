@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../../src"))
 project = "mne-videobrowser"
 copyright = "2025, Aalto University"  # noqa: A001
 author = "Teemu Taivainen"
-release = "0.2.0"
+release = "0.2.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
