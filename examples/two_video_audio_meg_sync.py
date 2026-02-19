@@ -86,7 +86,7 @@ def main() -> None:
         )
 
         # Start the browser.
-        raw_browser = raw.plot(block=False, show=False)
+        raw_browser = raw.plot(block=False, show=False, use_opengl=True)
         browse_raw_with_video_and_audio(
             raw_browser,
             raw,

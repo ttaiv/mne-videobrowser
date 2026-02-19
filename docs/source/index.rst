@@ -29,17 +29,17 @@ Installation
 ------------
 
 In addition to MNE-Python, this project requires package ``OpenCV`` for standard video file (such as .mp4) reading
-and ``sounddevice`` for audio playback. Recommended way to install MNE-Python is using
+and ``sounddevice`` for audio playback. Recommended way to install MNE-Python and thus this package is using
 `conda <https://github.com/conda/conda>`_.
 
 Using conda (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Create a new conda environment (named ``mne-videobrowser``) with MNE-Python installed.
+1. Create a new conda environment (named ``mne-videobrowser``) with this package and all dependencies installed:
 
    .. code-block:: bash
 
-      conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne
+      conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne-videobrowser
 
 2. Activate the environment:
 
@@ -47,29 +47,23 @@ Using conda (recommended)
 
       conda activate mne-videobrowser
 
-3. Install this package with rest of the dependencies:
-
-   .. code-block:: bash
-
-      pip install mne-videobrowser
-
-4. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
+3. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
    dependency of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:
 
    .. code-block:: bash
 
       sudo apt install libportaudio2
 
-Using only pip
-^^^^^^^^^^^^^^
+Using pip
+^^^^^^^^^
 
 1. Activate your desired Python environment (`documentation for virtual environments <https://docs.python.org/3/tutorial/venv.html>`_).
 
-2. Install this package, all dependencies will be installed automatically:
+2. Install this package, all dependencies will be installed automatically, except for a Qt binding, so you need to specify that in the command line as well if you don't have one (we recommend PySide6):
 
    .. code-block:: bash
 
-      pip install mne-videobrowser
+      pip install mne-videobrowser PySide6
 
 3. Only on linux: If you do not have `PortAudio library <https://www.portaudio.com/>`_, which is
    dependency of ``sounddevice`` installed, install it. For example on Ubuntu/Debian:

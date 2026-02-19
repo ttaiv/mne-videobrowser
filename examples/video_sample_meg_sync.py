@@ -105,7 +105,7 @@ def main() -> None:
     )
 
     # Launch the synced raw and video browsers.
-    raw_browser = raw.plot(block=False, show=False)
+    raw_browser = raw.plot(block=False, show=False, use_opengl=True)
     browse_raw_with_video(raw_browser, raw, [video], [aligner])
 
 

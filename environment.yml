@@ -1,0 +1,16 @@
+# This is used to create a conda environment for development and also
+# for building the documentation on readthedocs.
+
+name: mne-videobrowser-dev
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.10
+  - mne-base >=1.10
+  - mne-qt-browser >=0.7
+  - pyside6
+  - opencv >=4.8
+  - python-sounddevice >=0.5
+  - pip
+  - pip:
+    - -e .[dev]

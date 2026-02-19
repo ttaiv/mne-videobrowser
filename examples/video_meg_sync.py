@@ -53,7 +53,7 @@ def main() -> None:
         )
 
         # Instantiate the browsers.
-        raw_browser = raw.plot(block=False, show=False)
+        raw_browser = raw.plot(block=False, show=False, use_opengl=True)
         browse_raw_with_video(
             raw_browser,
             raw,

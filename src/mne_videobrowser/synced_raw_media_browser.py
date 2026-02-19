@@ -95,7 +95,9 @@ class SyncedRawMediaBrowser(QObject):
             dock = QDockWidget(media_browser_title, primary_raw_browser)
             dock.setWidget(media_browser)
             dock.setFloating(True)
-            primary_raw_browser.addDockWidget(Qt.RightDockWidgetArea, dock)
+            primary_raw_browser.addDockWidget(
+                Qt.DockWidgetArea.RightDockWidgetArea, dock
+            )
             dock.resize(1000, 800)
             if not show:
                 dock.hide()

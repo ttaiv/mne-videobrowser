@@ -415,9 +415,9 @@ class VideoBrowser(SyncableBrowserWidget):
     ) -> None:
         """Add a splitter with video views to the layout."""
         if video_splitter_orientation == "horizontal":
-            video_splitter = QSplitter(Qt.Horizontal, parent=self)
+            video_splitter = QSplitter(Qt.Orientation.Horizontal, parent=self)
         elif video_splitter_orientation == "vertical":
-            video_splitter = QSplitter(Qt.Vertical, parent=self)
+            video_splitter = QSplitter(Qt.Orientation.Vertical, parent=self)
         else:
             raise ValueError(
                 f"Invalid video splitter orientation: {video_splitter_orientation}. "
@@ -493,7 +493,9 @@ class VideoView(QWidget):
         # Add name of the video file as a label.
         video_name = os.path.basename(self._video.fname)
         video_label = QLabel(f"{video_name}")
-        video_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        video_label.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
         extras_layout.addWidget(video_label)
 
         # Add info icon that shows video stats when hovered over.
@@ -501,7 +503,12 @@ class VideoView(QWidget):
         info_pixmap = gui_utils.load_icon_pixmap("info.png")
         if info_pixmap is not None:
             info_icon.setPixmap(
-                info_pixmap.scaled(16, 16, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                info_pixmap.scaled(
+                    16,
+                    16,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
             )
         else:
             logger.warning("Info icon not found, using text-based icon")
@@ -519,7 +526,9 @@ class VideoView(QWidget):
 
         # Button to center the video view
         self._center_button = QPushButton("Center Video")
-        self._center_button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self._center_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
         self._center_button.clicked.connect(self.center_video)
         extras_layout.addWidget(self._center_button)
 

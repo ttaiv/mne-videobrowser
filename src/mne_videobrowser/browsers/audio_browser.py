@@ -246,7 +246,9 @@ class AudioView(QWidget):
         # Add name of the audio file as a label
         audio_name = os.path.basename(self._audio.fname)
         audio_label = QLabel(f"{audio_name}")
-        audio_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        audio_label.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
         toolbar_layout.addWidget(audio_label)
 
         # Add info label that shows audio stats when hovered over
@@ -254,7 +256,12 @@ class AudioView(QWidget):
         info_pixmap = gui_utils.load_icon_pixmap("info.png")
         if info_pixmap is not None:
             info_icon.setPixmap(
-                info_pixmap.scaled(16, 16, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                info_pixmap.scaled(
+                    16,
+                    16,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
             )
         else:
             logger.warning("Info icon not found, using text-based icon")
