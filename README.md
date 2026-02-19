@@ -30,12 +30,12 @@ A bit of the code structure and implementation details are also documented.
 ## Installation
 
 In addition to MNE-Python, this project requires package `OpenCV` for standard video file (such as .mp4) reading
-and `sounddevice` for audio playback. Recommended way to install MNE-Python is using
+and `sounddevice` for audio playback. Recommended way to install MNE-Python and thus this package is using
 [conda](https://github.com/conda/conda).
 
 ### Using conda (recommended)
 
-1. Create a new conda environment (named `mne-videobrowser`) with MNE-Python installed.
+1. Create a new conda environment (named `mne-videobrowser`) with this package and all dependencies installed:
 
    ```bash
    conda create --channel=conda-forge --strict-channel-priority --name=mne-videobrowser mne-videobrowser
@@ -54,7 +54,7 @@ dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
    sudo apt install libportaudio2
    ```
 
-### Using only pip
+### Using pip
 
 1. Activate your desired Python environment ([documentation for virtual environments](https://docs.python.org/3/tutorial/venv.html)).
 
@@ -77,20 +77,29 @@ See usage examples in [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/ma
 
 ### Installation for development
 
-To install this package for development, follow the regular installation guide
-(and maybe rename the conda environment to `mne-videobrowser-dev` or similar to distinguish it from the
-stable version), but instead of `pip install mne-videobrowser`:
-
 1. Clone this repository and navigate to project root.
 
-2. Install the package in editable mode and with development dependencies.
+2. Run
 
    ```bash
-   pip install -e .[dev]
+   conda env create -f environment.yml
    ```
 
-   Editable mode ensures that changes in source code are reflected to the installed package.
-   Development dependencies include `pytest` for running tests and `sphinx` for building documentation.
+   This will create a conda environment `mne-videobrowser-dev`, that has
+   development dependencies and the package installed in editable mode, which ensures that changes in source code are reflected to the installed package.
+
+3. Activate the environment:
+
+   ```bash
+   conda activate mne-videobrowser-dev
+   ```
+
+4. Only on linux: If you do not have [PortAudio library](https://www.portaudio.com/), which is
+dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
+
+   ```bash
+   sudo apt install libportaudio2
+   ```
 
 ### Running tests
 
