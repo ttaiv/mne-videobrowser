@@ -9,7 +9,7 @@ dependencies:
   - mne-base >=1.10
   - mne-qt-browser >=0.7
   - pyside6
-  - opencv >=4.8
+  - opencv >=4.8 *headless*  # specify headless to avoid GUI dependencies (Qt)
   - python-sounddevice >=0.5
   - pip
   - pip:
