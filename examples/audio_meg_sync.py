@@ -60,7 +60,7 @@ def main() -> None:
         )
 
         # Start the synced raw and audio browsers.
-        raw_browser = raw.plot(block=False, show=False)
+        raw_browser = raw.plot(block=False, show=False, use_opengl=True)
         browse_raw_with_audio(raw_browser, raw, audio, aligner)
 
 
