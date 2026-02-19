@@ -171,7 +171,7 @@ class IndexSlider(QWidget):
         self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
-        self._slider = QSlider(Qt.Horizontal, parent=self)
+        self._slider = QSlider(Qt.Orientation.Horizontal, parent=self)
         self._layout.addWidget(self._slider)
         self._slider.setMinimum(min_value)
         self._slider.setMaximum(max_value)

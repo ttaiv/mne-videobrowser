@@ -68,10 +68,10 @@ ignore-decorators = [
 ]
 
 [tool.pyright.defineConstant]
-PYQT5 = true
+PYQT5 = false
 PYSIDE2 = false
 PYQT6 = false
-PYSIDE6 = false
+PYSIDE6 = true
 
 [tool.pyright]
 typeCheckingMode = "standard"
