@@ -29,6 +29,7 @@ dependencies = [
   "mne>=1.10",
   "mne-qt-browser>=0.7",
   "opencv-python-headless>=4.8",
+  "psutil",
   "sounddevice>=0.5"
 ]
 [project.optional-dependencies]
