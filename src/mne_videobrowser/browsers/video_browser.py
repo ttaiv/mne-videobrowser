@@ -480,7 +480,7 @@ class VideoView(QWidget):
         graphics_widget = pg.GraphicsView(parent=self)
         self._layout.addWidget(graphics_widget)
         # that has viewbox...
-        self._view_box = pg.ViewBox(lockAspect=True, invertY=True)
+        self._view_box = pg.ViewBox(lockAspect=True, invertY=True)  # pyright: ignore[reportCallIssue]
         graphics_widget.setCentralWidget(self._view_box)
         # that holds image item.
         self._image_view = pg.ImageItem()
