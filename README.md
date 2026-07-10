@@ -71,7 +71,16 @@ dependency of `sounddevice` installed, install it. For example on Ubuntu/Debian:
    sudo apt install libportaudio2
    ```
 
+## Usage
+
 See usage examples in [GitHub](https://github.com/ttaiv/mne-videobrowser/tree/main/examples).
+
+> **Note:** The performance on some platforms might be largely affected by the parameter `use_opengl`
+> of MNE-Python's `raw.plot()` method. Experiment to find out the effect on you computer.
+>
+> **Extra note for Linux users:** If you encounter problems (for example not being able to drag the
+> video browser window) on Wayland, try telling Qt to use X11 instead by running
+> `export QT_QPA_PLATFORM=xcb` in your terminal.
 
 ## For developers
 

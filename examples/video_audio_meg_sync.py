@@ -76,6 +76,8 @@ def main() -> None:
         )
 
         # Start the browser.
+        # NOTE: Whether you should use OpenGL depends on your system and hardware.
+        # Try both True and False to see which option performs best on your setup.
         raw_browser = raw.plot(block=False, show=False, use_opengl=True)
         browse_raw_with_video_and_audio(
             raw_browser, raw, [video], [video_aligner], audio, audio_aligner

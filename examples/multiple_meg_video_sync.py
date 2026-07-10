@@ -118,6 +118,9 @@ def main() -> None:
     # Just to demonstrate multiple raw browsers, create another one.
     another_raw_browser = raw.plot(block=False, show=False, use_opengl=True)
 
+    # NOTE: Whether you should use OpenGL depends on your system and hardware.
+    # Try both True and False to see which option performs best on your setup.
+
     browse_raw_with_video(
         raw_browser,
         raw,

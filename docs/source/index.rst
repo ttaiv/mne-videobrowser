@@ -72,6 +72,23 @@ Using pip
 
       sudo apt install libportaudio2
 
+Usage
+-----
+
+See usage examples on `GitHub <https://github.com/ttaiv/mne-videobrowser/tree/main/examples>`_.
+
+.. admonition:: OpenGL affects performance
+
+   The performance on some platforms might be largely affected by the parameter
+   ``use_opengl`` of MNE-Python's ``raw.plot()`` method. Experiment to find out
+   the effect on your computer.
+
+.. admonition:: Wayland on Linux
+
+   If you encounter problems on Wayland (for example not being able to
+   drag the video browser window), try telling Qt to use X11 instead by running
+   ``export QT_QPA_PLATFORM=xcb`` in your terminal.
+
 
 Documentation Contents
 ----------------------
